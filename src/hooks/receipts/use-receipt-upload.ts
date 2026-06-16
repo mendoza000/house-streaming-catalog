@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
 import { uploadReceipt } from "@/api/receipts"
-import type { ReceiptUploadResult } from "@/types/supabase"
+import type { ReceiptUploadResult } from "@/types/receipt"
 
 export const receiptKeys = {
 	all: ["receipts"] as const,

@@ -10,7 +10,7 @@ import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate"
 import { formatPrice, convertPrice } from "@/utils/currency"
 import { useReceiptUpload } from "@/hooks/receipts/use-receipt-upload"
 import { toast } from "sonner"
-import type { ReceiptUploadError } from "@/types/supabase"
+import type { ReceiptUploadError } from "@/types/receipt"
 
 interface PagoMovilPaymentStepProps {
 	method: PaymentMethod

@@ -10,6 +10,7 @@ import { SearchBar } from "./search-bar"
 import { CategoryFilter } from "./category-filter"
 import { CurrencySelector } from "./currency-selector"
 import { ProductCard } from "./product-card"
+import type { Product } from "@/constants/products"
 
 export default function Products() {
 	const [searchQuery, setSearchQuery] = useState("")
@@ -25,9 +26,9 @@ export default function Products() {
 		if (!services) return []
 
 		return services
-			.map((service) => {
+			.map((service): Product => {
 				// Store base price in USD for cart
-				const basePrice = service.screen_price
+				const basePrice = service.screen_price ?? 0
 				// Convert price for display if VES is selected and exchange rate is available
 				const displayPrice =
 					currency === "VES" && exchangeRate
@@ -36,12 +37,12 @@ export default function Products() {
 
 				return {
 					id: service.id.toString(),
-					name: service.comercial_name,
+					name: service.comercial_name ?? "Sin nombre",
 					basePrice, // Price in USD for cart storage
 					price: displayPrice, // Price for display (converted if needed)
-					description: service.description,
+					description: service.description ?? "",
 					category: service.category ?? "Otros",
-					image: service.img,
+					image: service.img ?? "",
 					byRequest: service.is_by_request,
 					// Los bajo pedido no exponen stock (se consulta al admin).
 					available: service.is_by_request ? undefined : stock?.[service.id],

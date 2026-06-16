@@ -1,3 +1,5 @@
+import type { Json } from "@/types/supabase"
+import type { DeliveredAccount } from "@/types/delivery"
 import type { CartItem } from "@/stores/cart-store"
 
 export type OrderStatus = "draft" | "pending" | "validating" | "completed" | "failed" | "cancelled"
@@ -8,6 +10,21 @@ export interface OrderInfo {
 	paymentMethod: string
 	totalAmount: number
 	createdAt: Date
+	/** Token secreto para el link de seguimiento /orden/[token]. */
+	trackingToken?: string
+}
+
+/** Respuesta de GET /api/orders/track/[token]. Solo campos seguros. */
+export interface OrderTrackingResponse {
+	id: number
+	status: string | null
+	createdAt: string
+	amount: number | null
+	currency: string | null
+	items: Json | null
+	/** Credenciales entregadas; null salvo que la orden esté `completed`. */
+	delivered: DeliveredAccount[] | null
+	outOfStock: boolean
 }
 
 export interface ClientFormData {
