@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client"
-import type { ReceiptUploadResult, ReceiptUploadError } from "@/types/supabase"
+import type { ReceiptUploadResult, ReceiptUploadError } from "@/types/receipt"
 
 const BUCKET_NAME = "receipts"
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
