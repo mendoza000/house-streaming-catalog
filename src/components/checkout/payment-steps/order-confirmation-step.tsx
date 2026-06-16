@@ -1,8 +1,8 @@
 "use client"
 
-import { CheckCircle2, Copy } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
 import Link from "next/link"
-import { toast } from "sonner"
+import { DeliveredAccountsCard } from "@/components/orden/delivered-accounts-card"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { DeliveredAccount } from "@/types/delivery"
@@ -18,12 +18,10 @@ export function OrderConfirmationStep({
 	orderInfo,
 	deliveredAccounts = [],
 }: OrderConfirmationStepProps) {
-	const handleCopy = (text: string, label: string) => {
-		navigator.clipboard.writeText(text)
-		toast.success(`${label} copiado al portapapeles`)
-	}
-
 	const hasAccounts = deliveredAccounts.length > 0
+	const trackingHref = orderInfo.trackingToken
+		? `/orden/${orderInfo.trackingToken}`
+		: null
 
 	return (
 		<Card className="border-primary/20 bg-primary/5">
@@ -38,87 +36,34 @@ export function OrderConfirmationStep({
 			</CardHeader>
 			<CardContent className="space-y-6">
 				{hasAccounts ? (
-					<div className="space-y-4">
-						<h3 className="font-semibold text-sm flex items-center gap-2">
-							📦 Datos de tu{deliveredAccounts.length > 1 ? "s" : ""} cuenta
-							{deliveredAccounts.length > 1 ? "s" : ""}:
-						</h3>
-
-						{deliveredAccounts.map((account, index) => (
-							<div
-								key={`${account.mail}-${account.screen}-${index}`}
-								className="rounded-lg bg-background p-4 shadow-sm border space-y-3"
-							>
-								{account.service && (
-									<p className="text-sm font-semibold">
-										{account.service}{" "}
-										<span className="font-normal text-muted-foreground">
-											· Pantalla {account.screen}
-										</span>
-									</p>
-								)}
-
-								<div className="space-y-3 text-sm">
-									{account.mail && (
-										<div className="flex items-center justify-between p-2 rounded bg-muted/50">
-											<span className="text-muted-foreground">Email:</span>
-											<div className="flex items-center gap-2">
-												<span className="font-mono font-medium">
-													{account.mail}
-												</span>
-												<Button
-													variant="ghost"
-													size="icon"
-													className="h-6 w-6"
-													onClick={() => handleCopy(account.mail ?? "", "Email")}
-												>
-													<Copy className="size-3" />
-												</Button>
-											</div>
-										</div>
-									)}
-
-									{account.password && (
-										<div className="flex items-center justify-between p-2 rounded bg-muted/50">
-											<span className="text-muted-foreground">Contraseña:</span>
-											<div className="flex items-center gap-2">
-												<span className="font-mono font-medium">
-													{account.password}
-												</span>
-												<Button
-													variant="ghost"
-													size="icon"
-													className="h-6 w-6"
-													onClick={() =>
-														handleCopy(account.password ?? "", "Contraseña")
-													}
-												>
-													<Copy className="size-3" />
-												</Button>
-											</div>
-										</div>
-									)}
-								</div>
-							</div>
-						))}
-
-						<div className="rounded-md bg-amber-500/10 p-3">
-							<p className="text-xs text-amber-600 dark:text-amber-400">
-								⚠️ Guardá estos datos en un lugar seguro. Ante cualquier problema
-								con tu cuenta, escribinos.
-							</p>
-						</div>
-					</div>
+					<DeliveredAccountsCard accounts={deliveredAccounts} />
 				) : (
 					<div className="rounded-lg border bg-background p-4">
 						<p className="text-sm text-muted-foreground">
 							Recibimos tu pago. Estamos preparando tu cuenta y te la enviamos a
-							la brevedad. Si tarda, escribinos con tu número de orden{" "}
+							la brevedad.{" "}
+							{trackingHref
+								? "Podés seguir el estado de tu orden y recuperar tus credenciales desde el link de abajo en cualquier momento."
+								: "Si tarda, escribinos con tu número de orden."}{" "}
 							<span className="font-mono font-medium text-foreground">
 								#{orderInfo.id}
 							</span>
 							.
 						</p>
+					</div>
+				)}
+
+				{trackingHref && (
+					<div className="rounded-md bg-muted/50 p-3 text-center">
+						<p className="text-xs text-muted-foreground mb-2">
+							Guardá este link para ver tu orden y credenciales cuando quieras:
+						</p>
+						<Link
+							href={trackingHref}
+							className="text-sm font-medium text-primary underline underline-offset-4 break-all"
+						>
+							Ver el seguimiento de tu orden
+						</Link>
 					</div>
 				)}
 

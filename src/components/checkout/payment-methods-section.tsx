@@ -38,6 +38,7 @@ export function PaymentMethodsSection({
 	const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
 	const [orderStatus, setOrderStatus] = useState<OrderStatus>("pending")
 	const [orderId, setOrderId] = useState<number | null>(null)
+	const [trackingToken, setTrackingToken] = useState<string | null>(null)
 	const [deliveredAccounts, setDeliveredAccounts] = useState<DeliveredAccount[]>(
 		[],
 	)
@@ -89,6 +90,7 @@ export function PaymentMethodsSection({
 
 		if (order) {
 			setOrderId(order.id)
+			setTrackingToken(order.tracking_token)
 			onStepChange?.(2)
 			// Si hay servicios bajo pedido, consultar disponibilidad antes de pagar.
 			if (byRequestItems.length > 0) {
@@ -213,6 +215,7 @@ export function PaymentMethodsSection({
 						paymentMethod: selectedMethod?.name ?? "Desconocido",
 						totalAmount: totalAmount,
 						createdAt: new Date(),
+						trackingToken: trackingToken ?? undefined,
 					}}
 					deliveredAccounts={deliveredAccounts}
 				/>
