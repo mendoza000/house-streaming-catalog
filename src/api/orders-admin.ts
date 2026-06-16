@@ -38,6 +38,36 @@ export async function getOrderAdmin(
 }
 
 /**
+ * Lee una orden por su token de seguimiento (secreto) saltando RLS.
+ * Clave de acceso de la página /orden/[token]: el token es imposible de
+ * enumerar, a diferencia del id secuencial.
+ */
+export async function getOrderByTrackingToken(
+	trackingToken: string,
+): Promise<{ data: Order | null; error: Error | null }> {
+	try {
+		const { data, error } = await supabaseAdmin
+			.from("orders")
+			.select("*")
+			.eq("tracking_token", trackingToken)
+			.maybeSingle()
+
+		if (error) {
+			console.error("Error fetching order by tracking token:", error)
+			return { data: null, error: new Error(error.message) }
+		}
+
+		return { data, error: null }
+	} catch (error) {
+		console.error("Unexpected error fetching order by tracking token:", error)
+		return {
+			data: null,
+			error: error instanceof Error ? error : new Error("Failed to fetch order"),
+		}
+	}
+}
+
+/**
  * Busca una orden ya asociada a un transactionId de Binance.
  * Usado para impedir que una misma transacción complete dos órdenes.
  */
