@@ -131,4 +131,16 @@
       animation-duration: 0.2s;
     }
   }
+
+  /* PayPal button container transparent background fix */
+  .paypal-buttons-container,
+  .paypal-buttons-container * {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+  
+  /* Ensure PayPal iframes inherit transparent background */
+  .paypal-buttons-container iframe {
+    background: transparent !important;
+  }
 }

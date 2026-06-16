@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# editor
+.vscode/
+
+# residual npm lockfile (this project uses bun)
+package-lock.json
+
+# supabase CLI local state
+/supabase/.temp/
+
+# windows artifact
+nul
