@@ -3,16 +3,19 @@
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { DeliveredAccount } from "@/types/delivery"
 
 interface CreditCardPaymentStepProps {
+	orderId: number
 	amount: number
 	currency?: string
-	onSuccess: (details: unknown) => void
+	onSuccess: (delivered: DeliveredAccount[]) => void
 	onError: (error: unknown) => void
 	onBack: () => void
 }
 
 export function CreditCardPaymentStep({
+	orderId,
 	amount,
 	currency = "USD",
 	onSuccess,
@@ -65,62 +68,44 @@ export function CreditCardPaymentStep({
 									tagline: false,
 								}}
 								fundingSource="card"
-								createOrder={async (_data, actions) => {
-									try {
-										const response = await fetch("/api/paypal/create-order", {
-											method: "POST",
-											headers: { "Content-Type": "application/json" },
-											body: JSON.stringify({ amount, currency }),
-										})
+								createOrder={async () => {
+									// El monto lo fija el server desde la orden en DB; el
+									// cliente solo manda el id. Sin fallback client-side: dejaría
+									// el monto en manos del browser.
+									const response = await fetch("/api/paypal/create-order", {
+										method: "POST",
+										headers: { "Content-Type": "application/json" },
+										body: JSON.stringify({ orderId }),
+									})
 
-										if (!response.ok) {
-											throw new Error("Failed to create order")
-										}
-
-										const order = await response.json()
-										return order.id
-									} catch (error) {
-										console.error(
-											"API create order failed, using fallback:",
-											error,
-										)
-										// Fallback to client-side order creation
-										return actions.order.create({
-											intent: "CAPTURE",
-											purchase_units: [
-												{
-													amount: {
-														currency_code: currency,
-														value: amount.toFixed(2),
-													},
-												},
-											],
-										})
+									if (!response.ok) {
+										throw new Error("Failed to create order")
 									}
+
+									const order = await response.json()
+									return order.id
 								}}
-								onApprove={async (_data, actions) => {
-									try {
-										// Try to capture via API route first
-										const response = await fetch("/api/paypal/capture-order", {
-											method: "POST",
-											headers: { "Content-Type": "application/json" },
-											body: JSON.stringify({ orderId: _data.orderID }),
-										})
+								onApprove={async (data) => {
+									// La captura + completar orden + entrega ocurren server-side
+									// (service-role). Sin fallback: la captura client-side
+									// dejaría la orden sin completar y la cuenta sin entregar.
+									const response = await fetch("/api/paypal/capture-order", {
+										method: "POST",
+										headers: { "Content-Type": "application/json" },
+										body: JSON.stringify({
+											paypalOrderId: data.orderID,
+											orderId,
+										}),
+									})
 
-										if (response.ok) {
-											const details = await response.json()
-											onSuccess(details)
-											return
-										}
-									} catch {
-										// Fallback to client-side capture
+									if (!response.ok) {
+										const error = await response.json().catch(() => ({}))
+										onError(error)
+										return
 									}
 
-									// Client-side capture fallback
-									if (actions.order) {
-										const details = await actions.order.capture()
-										onSuccess(details)
-									}
+									const result = await response.json()
+									onSuccess(result.delivered ?? [])
 								}}
 								onError={(err) => {
 									console.error("PayPal card error:", err)
