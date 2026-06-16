@@ -15,10 +15,8 @@ import { PAYMENT_METHODS } from "@/constants/payment-methods"
 import { useCartStore } from "@/stores/cart-store"
 import { useCurrencyStore } from "@/stores/currency-store"
 import { useCreateOrder } from "@/hooks/orders/use-create-order"
-import { useFulfillOrder } from "@/hooks/orders/use-fulfill-order"
 import { useServices } from "@/hooks/services/use-services"
 import type { AvailabilityItem } from "@/hooks/orders/use-availability-check"
-import { updateOrderStatus, updateOrderToPending } from "@/api/orders"
 import type { OrderStatus, ClientFormData } from "@/types/order-types"
 import type { DeliveredAccount } from "@/types/delivery"
 import { Loader2, AlertCircle } from "lucide-react"
@@ -53,7 +51,6 @@ export function PaymentMethodsSection({
 	const currency = useCurrencyStore((state) => state.currency)
 	
 	const { mutate: createOrderMutation, isLoading: isCreatingOrder, error: createOrderError } = useCreateOrder()
-	const { fulfill } = useFulfillOrder()
 	const { data: services } = useServices()
 
 	// Ítems del carrito que son "bajo pedido" (requieren consultar disponibilidad).
@@ -116,38 +113,15 @@ export function PaymentMethodsSection({
 		onStepChange?.(1)
 	}
 
-	const handlePaymentSuccess = async () => {
-		// Determine next state based on payment method type
-		// If manual (like Pago Movil), go to validating state
-		// If automatic (like PayPal), go directly to completed
-		const nextStatus: OrderStatus =
-			selectedMethod?.type === "manual" ? "validating" : "completed"
-
-		setOrderStatus(nextStatus)
-		
-		// Update order status in database
-		// First update draft → pending, then to final status
-		if (orderId) {
-			// Cambiar de draft a pending si aún está en draft
-			await updateOrderToPending(orderId)
-
-			// Luego actualizar al estado final
-			await updateOrderStatus(orderId, nextStatus)
-
-			// Si quedó pagada (automático: PayPal/tarjeta), entregar la cuenta real.
-			if (nextStatus === "completed") {
-				const result = await fulfill(orderId)
-				setDeliveredAccounts(result?.delivered ?? [])
-			}
-		}
-
+	// PayPal / tarjeta: el server capturó el pago, marcó la orden `completed` Y la
+	// entregó (service-role, bypasea RLS). Acá solo reflejamos estado + lo
+	// entregado, sin escribir a DB desde el cliente (la RLS lo bloquearía).
+	const handleAutomaticDelivered = (delivered: DeliveredAccount[]) => {
+		setDeliveredAccounts(delivered)
+		setOrderStatus("completed")
 		setCurrentStep(3)
 		onStepChange?.(3)
-
-		// If completed (automatic), we clear cart immediately
-		if (nextStatus === "completed") {
-			clearCart()
-		}
+		clearCart()
 	}
 
 	// Binance: el server ya marcó la orden `completed` Y la entregó (devuelve las
@@ -247,8 +221,9 @@ export function PaymentMethodsSection({
 			case "paypal":
 				return (
 					<PayPalPaymentStep
+						orderId={orderId}
 						amount={totalAmount}
-						onSuccess={handlePaymentSuccess}
+						onSuccess={handleAutomaticDelivered}
 						onError={handlePaymentError}
 						onBack={handleBackToStep1}
 					/>
@@ -256,8 +231,9 @@ export function PaymentMethodsSection({
 			case "credit-card":
 				return (
 					<CreditCardPaymentStep
+						orderId={orderId}
 						amount={totalAmount}
-						onSuccess={handlePaymentSuccess}
+						onSuccess={handleAutomaticDelivered}
 						onError={handlePaymentError}
 						onBack={handleBackToStep1}
 					/>

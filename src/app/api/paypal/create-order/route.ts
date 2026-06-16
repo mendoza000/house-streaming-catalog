@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { getOrderAdmin } from "@/api/orders-admin"
+import { expectedUsdAmount } from "@/lib/paypal/amount"
 
 const PAYPAL_API_BASE =
 	process.env.NODE_ENV === "production"
@@ -32,12 +34,37 @@ async function getAccessToken(): Promise<string> {
 	return data.access_token
 }
 
+/**
+ * POST /api/paypal/create-order
+ * Body: { orderId: number }
+ *
+ * Crea un order de PayPal usando el monto de NUESTRA orden en DB como fuente de
+ * verdad (service-role). El cliente solo manda el id; no puede influir el monto.
+ */
 export async function POST(request: NextRequest) {
 	try {
-		const { amount, currency = "USD" } = await request.json()
+		const { orderId } = await request.json()
 
-		if (!amount || typeof amount !== "number") {
-			return NextResponse.json({ error: "Invalid amount" }, { status: 400 })
+		if (typeof orderId !== "number" || !Number.isInteger(orderId)) {
+			return NextResponse.json({ error: "Invalid order ID" }, { status: 400 })
+		}
+
+		const { data: order, error: orderError } = await getOrderAdmin(orderId)
+		if (orderError) {
+			return NextResponse.json({ error: orderError.message }, { status: 500 })
+		}
+		if (!order) {
+			return NextResponse.json({ error: "Order not found" }, { status: 404 })
+		}
+
+		let amountUsd: number
+		try {
+			amountUsd = await expectedUsdAmount(order)
+		} catch {
+			return NextResponse.json(
+				{ error: "Could not determine order amount" },
+				{ status: 422 },
+			)
 		}
 
 		const accessToken = await getAccessToken()
@@ -52,10 +79,8 @@ export async function POST(request: NextRequest) {
 				intent: "CAPTURE",
 				purchase_units: [
 					{
-						amount: {
-							currency_code: currency,
-							value: amount.toFixed(2),
-						},
+						amount: { currency_code: "USD", value: amountUsd.toFixed(2) },
+						custom_id: `ord-${orderId}`,
 					},
 				],
 			}),
@@ -69,8 +94,8 @@ export async function POST(request: NextRequest) {
 			)
 		}
 
-		const order = await response.json()
-		return NextResponse.json(order)
+		const paypalOrder = await response.json()
+		return NextResponse.json(paypalOrder)
 	} catch (error) {
 		console.error("PayPal create order error:", error)
 		return NextResponse.json(
