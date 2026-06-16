@@ -1,31 +1,31 @@
 "use client"
 
-import { ButtonGroup } from "@/components/ui/button-group"
 import { Button } from "@/components/ui/button"
-import { categories, type Category } from "@/constants/products"
+import { ButtonGroup } from "@/components/ui/button-group"
 
 interface CategoryFilterProps {
-	selectedCategory: Category
-	onCategoryChange: (category: Category) => void
+	/** Categorías a mostrar, derivadas de los servicios (incluye "Todos"). */
+	categories: string[]
+	selectedCategory: string
+	onCategoryChange: (category: string) => void
 }
 
 export function CategoryFilter({
+	categories,
 	selectedCategory,
 	onCategoryChange,
 }: CategoryFilterProps) {
 	return (
-		<div className="w-full overflow-x-auto">
-			<ButtonGroup>
-				{categories.map((category) => (
-					<Button
-						key={category}
-						variant={selectedCategory === category ? "default" : "outline"}
-						onClick={() => onCategoryChange(category)}
-					>
-						{category}
-					</Button>
-				))}
-			</ButtonGroup>
-		</div>
+		<ButtonGroup>
+			{categories.map((category) => (
+				<Button
+					key={category}
+					variant={selectedCategory === category ? "default" : "outline"}
+					onClick={() => onCategoryChange(category)}
+				>
+					{category}
+				</Button>
+			))}
+		</ButtonGroup>
 	)
 }
