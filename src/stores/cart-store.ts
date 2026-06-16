@@ -7,6 +7,8 @@ export interface CartItem {
 	price: number
 	quantity: number
 	image?: string
+	accounts: number
+	months: number
 }
 
 interface CartStore {
@@ -14,6 +16,7 @@ interface CartStore {
 	addItem: (item: Omit<CartItem, "quantity">) => void
 	removeItem: (itemId: string) => void
 	updateQuantity: (itemId: string, quantity: number) => void
+	updateItemConfig: (itemId: string, accounts: number, months: number) => void
 	clearCart: () => void
 	getTotalItems: () => number
 	getTotalPrice: () => number
@@ -26,12 +29,22 @@ export const useCartStore = create<CartStore>()(
 
 			addItem: (item) => {
 				set((state) => {
-					const existingItem = state.items.find((i) => i.id === item.id)
+					// Find existing item with same id, accounts, and months
+					const existingItem = state.items.find(
+						(i) =>
+							i.id === item.id &&
+							i.accounts === item.accounts &&
+							i.months === item.months,
+					)
 
 					if (existingItem) {
 						return {
 							items: state.items.map((i) =>
-								i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+								i.id === item.id &&
+								i.accounts === item.accounts &&
+								i.months === item.months
+									? { ...i, quantity: i.quantity + 1 }
+									: i,
 							),
 						}
 					}
@@ -56,7 +69,15 @@ export const useCartStore = create<CartStore>()(
 
 				set((state) => ({
 					items: state.items.map((item) =>
-						item.id === itemId ? { ...item, quantity } : item
+						item.id === itemId ? { ...item, quantity } : item,
+					),
+				}))
+			},
+
+			updateItemConfig: (itemId, accounts, months) => {
+				set((state) => ({
+					items: state.items.map((item) =>
+						item.id === itemId ? { ...item, accounts, months } : item,
 					),
 				}))
 			},
@@ -71,14 +92,15 @@ export const useCartStore = create<CartStore>()(
 
 			getTotalPrice: () => {
 				return get().items.reduce(
-					(total, item) => total + item.price * item.quantity,
-					0
+					(total, item) =>
+						total + item.price * item.accounts * item.months * item.quantity,
+					0,
 				)
 			},
 		}),
 		{
 			name: "cart-storage", // nombre de la key en localStorage
 			storage: createJSONStorage(() => localStorage),
-		}
-	)
+		},
+	),
 )

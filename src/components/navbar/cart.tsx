@@ -1,10 +1,17 @@
 "use client"
 
-import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react"
+import {
+	ShoppingCart,
+	Trash2,
+	Plus,
+	Minus,
+	Users,
+	Calendar,
+} from "lucide-react"
 import { useState, useEffect } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { makeWhatsappLink } from "@/utils/makeWhatsappLink"
 import {
 	Drawer,
 	DrawerClose,
@@ -26,10 +33,16 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet"
 import { useCartStore } from "@/stores/cart-store"
+import { useCurrencyStore } from "@/stores/currency-store"
+import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate"
+import { formatPrice, convertPrice } from "@/utils/currency"
 
 export function Cart() {
+	const router = useRouter()
+	const pathname = usePathname()
 	const [isDesktop, setIsDesktop] = useState(false)
 	const [mounted, setMounted] = useState(false)
+	const [isOpen, setIsOpen] = useState(false)
 
 	// Store de Zustand
 	const cartItems = useCartStore((state) => state.items)
@@ -37,13 +50,16 @@ export function Cart() {
 	const updateQuantity = useCartStore((state) => state.updateQuantity)
 	const getTotalItems = useCartStore((state) => state.getTotalItems)
 	const getTotalPrice = useCartStore((state) => state.getTotalPrice)
+	const currency = useCurrencyStore((state) => state.currency)
+	const { data: exchangeRate } = useExchangeRate()
 
 	const itemCount = getTotalItems()
-	const total = getTotalPrice()
+	const baseTotalPrice = getTotalPrice()
+	const total = convertPrice(baseTotalPrice, currency, exchangeRate)
 
 	const handleCheckout = () => {
-		const whatsappLink = makeWhatsappLink({ items: cartItems })
-		window.open(whatsappLink, "_blank")
+		setIsOpen(false) // Close drawer/sheet
+		router.push("/checkout")
 	}
 
 	useEffect(() => {
@@ -62,6 +78,11 @@ export function Cart() {
 
 		return () => mediaQuery.removeEventListener("change", checkIsDesktop)
 	}, [])
+
+	// Hide cart button on checkout page
+	if (pathname === "/checkout") {
+		return null
+	}
 
 	// Evitar hydration mismatch
 	if (!mounted) {
@@ -104,7 +125,7 @@ export function Cart() {
 				<div className="space-y-3">
 					{cartItems.map((item) => (
 						<div
-							key={item.id}
+							key={`${item.id}-${item.accounts}-${item.months}`}
 							className="group relative flex gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50"
 						>
 							{/* Imagen placeholder */}
@@ -125,9 +146,23 @@ export function Cart() {
 							{/* Información del producto */}
 							<div className="flex-1 min-w-0">
 								<div className="flex items-start justify-between gap-2 mb-2">
-									<h3 className="font-semibold text-base line-clamp-2">
-										{item.title}
-									</h3>
+									<div className="flex-1">
+										<h3 className="font-semibold text-base line-clamp-2">
+											{item.title}
+										</h3>
+										{/* Info de configuración */}
+										<div className="flex flex-wrap gap-1.5 mt-1.5">
+											<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+												<Users className="size-3" />
+												{item.accounts}{" "}
+												{item.accounts === 1 ? "cuenta" : "cuentas"}
+											</span>
+											<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-medium">
+												<Calendar className="size-3" />
+												{item.months} {item.months === 1 ? "mes" : "meses"}
+											</span>
+										</div>
+									</div>
 									<Button
 										size="icon"
 										variant="ghost"
@@ -164,9 +199,15 @@ export function Cart() {
 									</Button>
 								</div>
 
-								<p className="text-lg font-bold text-primary">
-									${(item.price * item.quantity).toFixed(2)}
-								</p>
+								<div className="flex items-baseline gap-2">
+									<p className="text-lg font-bold text-primary">
+										{formatPrice(convertPrice(item.price * item.accounts * item.months * item.quantity, currency, exchangeRate), currency)}
+									</p>
+									<p className="text-xs text-muted-foreground">
+										({formatPrice(convertPrice(item.price, currency, exchangeRate), currency)}/mes × {item.accounts} × {item.months}{" "}
+										{item.months === 1 ? "mes" : "meses"})
+									</p>
+								</div>
 							</div>
 						</div>
 					))}
@@ -178,7 +219,7 @@ export function Cart() {
 	// Drawer para móvil
 	if (!isDesktop) {
 		return (
-			<Drawer>
+			<Drawer open={isOpen} onOpenChange={setIsOpen}>
 				<DrawerTrigger asChild>{CartButton}</DrawerTrigger>
 				<DrawerContent>
 					<div className="mx-auto w-full max-w-sm flex flex-col max-h-160">
@@ -189,7 +230,7 @@ export function Cart() {
 									? "Tu carrito está vacío"
 									: `${itemCount} ${
 											itemCount === 1 ? "artículo" : "artículos"
-									  } en tu carrito`}
+										} en tu carrito`}
 							</DrawerDescription>
 						</DrawerHeader>
 
@@ -199,7 +240,7 @@ export function Cart() {
 							{cartItems.length > 0 && (
 								<div className="flex items-center justify-between mb-4 text-lg font-bold">
 									<span>Total:</span>
-									<span>${total.toFixed(2)}</span>
+									<span>{formatPrice(total, currency)}</span>
 								</div>
 							)}
 							<Button
@@ -223,7 +264,7 @@ export function Cart() {
 
 	// Sheet para desktop
 	return (
-		<Sheet>
+		<Sheet open={isOpen} onOpenChange={setIsOpen}>
 			<SheetTrigger asChild>{CartButton}</SheetTrigger>
 			<SheetContent className="flex flex-col">
 				<SheetHeader>
@@ -233,7 +274,7 @@ export function Cart() {
 							? "Tu carrito está vacío"
 							: `${itemCount} ${
 									itemCount === 1 ? "artículo" : "artículos"
-							  } en tu carrito`}
+								} en tu carrito`}
 					</SheetDescription>
 				</SheetHeader>
 
@@ -244,7 +285,7 @@ export function Cart() {
 						<div className="flex items-center justify-between px-4 py-3 bg-muted/50 rounded-lg">
 							<span className="text-lg font-semibold">Total:</span>
 							<span className="text-2xl font-bold text-primary">
-								${total.toFixed(2)}
+								{formatPrice(total, currency)}
 							</span>
 						</div>
 					)}
@@ -265,3 +306,6 @@ export function Cart() {
 		</Sheet>
 	)
 }
+
+
+
