@@ -9,6 +9,13 @@ interface DeliveredAccountsCardProps {
 	accounts: DeliveredAccount[]
 }
 
+const formatExpiry = (iso: string) =>
+	new Date(iso).toLocaleDateString("es-VE", {
+		day: "numeric",
+		month: "long",
+		year: "numeric",
+	})
+
 /**
  * Render compartido de las credenciales entregadas (email/contraseña por
  * pantalla, con copiar al portapapeles). Reusado por el paso de confirmación
@@ -38,6 +45,12 @@ export function DeliveredAccountsCard({ accounts }: DeliveredAccountsCardProps) 
 							<span className="font-normal text-muted-foreground">
 								· Pantalla {account.screen}
 							</span>
+						</p>
+					)}
+
+					{account.expires_at && (
+						<p className="text-xs text-muted-foreground">
+							Vence el {formatExpiry(account.expires_at)}
 						</p>
 					)}
 

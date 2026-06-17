@@ -53,6 +53,13 @@ export type Database = {
             foreignKeyName: "accounts_service_fkey"
             columns: ["service"]
             isOneToOne: false
+            referencedRelation: "service_stock"
+            referencedColumns: ["service_id"]
+          },
+          {
+            foreignKeyName: "accounts_service_fkey"
+            columns: ["service"]
+            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -95,9 +102,12 @@ export type Database = {
           amount: number | null
           created_at: string
           day: number | null
+          expires_at: string | null
           id: number
           is_reseller_customer: boolean | null
+          months: number | null
           name: string | null
+          order_id: number | null
           paid: boolean | null
           phone: string | null
           reseller: number | null
@@ -109,9 +119,12 @@ export type Database = {
           amount?: number | null
           created_at?: string
           day?: number | null
+          expires_at?: string | null
           id?: number
           is_reseller_customer?: boolean | null
+          months?: number | null
           name?: string | null
+          order_id?: number | null
           paid?: boolean | null
           phone?: string | null
           reseller?: number | null
@@ -123,9 +136,12 @@ export type Database = {
           amount?: number | null
           created_at?: string
           day?: number | null
+          expires_at?: string | null
           id?: number
           is_reseller_customer?: boolean | null
+          months?: number | null
           name?: string | null
+          order_id?: number | null
           paid?: boolean | null
           phone?: string | null
           reseller?: number | null
@@ -143,7 +159,21 @@ export type Database = {
             foreignKeyName: "clients_account_service_fkey"
             columns: ["account_service"]
             isOneToOne: false
+            referencedRelation: "service_stock"
+            referencedColumns: ["service_id"]
+          },
+          {
+            foreignKeyName: "clients_account_service_fkey"
+            columns: ["account_service"]
+            isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
@@ -296,6 +326,7 @@ export type Database = {
           client_id: number | null
           created_at: string
           id: number
+          order_id: number | null
           reseller: number | null
           screen: number | null
         }
@@ -304,6 +335,7 @@ export type Database = {
           client_id?: number | null
           created_at?: string
           id?: number
+          order_id?: number | null
           reseller?: number | null
           screen?: number | null
         }
@@ -312,6 +344,7 @@ export type Database = {
           client_id?: number | null
           created_at?: string
           id?: number
+          order_id?: number | null
           reseller?: number | null
           screen?: number | null
         }
@@ -328,6 +361,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
@@ -383,80 +423,106 @@ export type Database = {
           account_id: number | null
           cart_id: string | null
           client_name: string | null
-          client_phone: string | null
-          created_at: string
-          description: string
+          client_phone: string
+          created_at: string | null
+          description: string | null
           id: string
-          months: number | null
+          months: number
           order_id: number | null
-          receipt_url: string
+          receipt_url: string | null
           resolved_action: string | null
           resolved_at: string | null
-          screen_number: number
+          screen_number: number | null
           service_id: number | null
           source: string
-          status: string | null
-          telegram_msg_id: number
-          type: string | null
+          status: string
+          telegram_msg_id: number | null
+          type: string
         }
         Insert: {
           account_id?: number | null
           cart_id?: string | null
           client_name?: string | null
-          client_phone?: string | null
-          created_at?: string
-          description?: string
+          client_phone: string
+          created_at?: string | null
+          description?: string | null
           id?: string
-          months?: number | null
+          months?: number
           order_id?: number | null
-          receipt_url?: string
+          receipt_url?: string | null
           resolved_action?: string | null
           resolved_at?: string | null
-          screen_number?: number
+          screen_number?: number | null
           service_id?: number | null
           source?: string
-          status?: string | null
-          telegram_msg_id?: number
-          type?: string | null
+          status?: string
+          telegram_msg_id?: number | null
+          type: string
         }
         Update: {
           account_id?: number | null
           cart_id?: string | null
           client_name?: string | null
-          client_phone?: string | null
-          created_at?: string
-          description?: string
+          client_phone?: string
+          created_at?: string | null
+          description?: string | null
           id?: string
-          months?: number | null
+          months?: number
           order_id?: number | null
-          receipt_url?: string
+          receipt_url?: string | null
           resolved_action?: string | null
           resolved_at?: string | null
-          screen_number?: number
+          screen_number?: number | null
           service_id?: number | null
           source?: string
-          status?: string | null
-          telegram_msg_id?: number
-          type?: string | null
+          status?: string
+          telegram_msg_id?: number | null
+          type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tickets_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_stock"
+            referencedColumns: ["service_id"]
+          },
+          {
+            foreignKeyName: "tickets_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       service_stock: {
         Row: {
-          service_id: number | null
-          capacity: number | null
           available: number | null
+          capacity: number | null
+          service_id: number | null
         }
         Relationships: []
       }
     }
     Functions: {
-      fulfill_order: {
-        Args: { p_order_id: number }
-        Returns: Json
-      }
+      fulfill_order: { Args: { p_order_id: number }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
@@ -589,11 +655,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
-// Exported types for convenience
-export type Service = Database["public"]["Tables"]["services"]["Row"]
-export type Ticket = Database["public"]["Tables"]["tickets"]["Row"]
-export type TicketInsert = Database["public"]["Tables"]["tickets"]["Insert"]
-export type Order = Database["public"]["Tables"]["orders"]["Row"]
-export type OrderInsert = Database["public"]["Tables"]["orders"]["Insert"]
-export type OrderUpdate = Database["public"]["Tables"]["orders"]["Update"]
