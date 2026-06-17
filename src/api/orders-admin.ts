@@ -1,5 +1,5 @@
-import { supabaseAdmin } from "@/lib/supabase/admin"
-import type { Order, OrderUpdate } from "@/types/supabase"
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import type { Order, OrderUpdate } from "@/types/supabase";
 
 /**
  * Funciones de orden SERVER-ONLY que usan el cliente service-role.
@@ -20,20 +20,21 @@ export async function getOrderAdmin(
 			.from("orders")
 			.select("*")
 			.eq("id", orderId)
-			.maybeSingle()
+			.maybeSingle();
 
 		if (error) {
-			console.error("Error fetching order (admin):", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error fetching order (admin):", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
-		return { data, error: null }
+		return { data, error: null };
 	} catch (error) {
-		console.error("Unexpected error fetching order (admin):", error)
+		console.error("Unexpected error fetching order (admin):", error);
 		return {
 			data: null,
-			error: error instanceof Error ? error : new Error("Failed to fetch order"),
-		}
+			error:
+				error instanceof Error ? error : new Error("Failed to fetch order"),
+		};
 	}
 }
 
@@ -50,20 +51,21 @@ export async function getOrderByTrackingToken(
 			.from("orders")
 			.select("*")
 			.eq("tracking_token", trackingToken)
-			.maybeSingle()
+			.maybeSingle();
 
 		if (error) {
-			console.error("Error fetching order by tracking token:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error fetching order by tracking token:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
-		return { data, error: null }
+		return { data, error: null };
 	} catch (error) {
-		console.error("Unexpected error fetching order by tracking token:", error)
+		console.error("Unexpected error fetching order by tracking token:", error);
 		return {
 			data: null,
-			error: error instanceof Error ? error : new Error("Failed to fetch order"),
-		}
+			error:
+				error instanceof Error ? error : new Error("Failed to fetch order"),
+		};
 	}
 }
 
@@ -79,23 +81,26 @@ export async function findOrderByPaymentReference(
 			.from("orders")
 			.select("*")
 			.eq("payment_reference", paymentReference)
-			.maybeSingle()
+			.maybeSingle();
 
 		if (error) {
-			console.error("Error finding order by payment reference:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error finding order by payment reference:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
-		return { data, error: null }
+		return { data, error: null };
 	} catch (error) {
-		console.error("Unexpected error finding order by payment reference:", error)
+		console.error(
+			"Unexpected error finding order by payment reference:",
+			error,
+		);
 		return {
 			data: null,
 			error:
 				error instanceof Error
 					? error
 					: new Error("Failed to find order by payment reference"),
-		}
+		};
 	}
 }
 
@@ -112,27 +117,27 @@ export async function completeOrderWithReference(
 		const updateData: OrderUpdate = {
 			status: "completed",
 			payment_reference: paymentReference,
-		}
+		};
 
 		const { data, error } = await supabaseAdmin
 			.from("orders")
 			.update(updateData)
 			.eq("id", orderId)
 			.select("*")
-			.single()
+			.single();
 
 		if (error) {
-			console.error("Error completing order with reference:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error completing order with reference:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
-		return { data, error: null }
+		return { data, error: null };
 	} catch (error) {
-		console.error("Unexpected error completing order with reference:", error)
+		console.error("Unexpected error completing order with reference:", error);
 		return {
 			data: null,
 			error:
 				error instanceof Error ? error : new Error("Failed to complete order"),
-		}
+		};
 	}
 }

@@ -1,11 +1,11 @@
-import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-export type Currency = "USD" | "VES"
+export type Currency = "USD" | "VES";
 
 interface CurrencyStore {
-	currency: Currency
-	setCurrency: (currency: Currency) => void
+	currency: Currency;
+	setCurrency: (currency: Currency) => void;
 }
 
 export const useCurrencyStore = create<CurrencyStore>()(
@@ -18,4 +18,4 @@ export const useCurrencyStore = create<CurrencyStore>()(
 			name: "currency-storage",
 		},
 	),
-)
+);

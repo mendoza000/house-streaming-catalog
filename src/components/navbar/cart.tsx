@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
 import {
+	Calendar,
+	Minus,
+	Plus,
 	ShoppingCart,
 	Trash2,
-	Plus,
-	Minus,
 	Users,
-	Calendar,
-} from "lucide-react"
-import { useState, useEffect } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
+} from "lucide-react";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
 	Drawer,
 	DrawerClose,
@@ -21,7 +21,7 @@ import {
 	DrawerHeader,
 	DrawerTitle,
 	DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
 import {
 	Sheet,
 	SheetClose,
@@ -31,57 +31,57 @@ import {
 	SheetHeader,
 	SheetTitle,
 	SheetTrigger,
-} from "@/components/ui/sheet"
-import { useCartStore } from "@/stores/cart-store"
-import { useCurrencyStore } from "@/stores/currency-store"
-import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate"
-import { formatPrice, convertPrice } from "@/utils/currency"
+} from "@/components/ui/sheet";
+import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate";
+import { useCartStore } from "@/stores/cart-store";
+import { useCurrencyStore } from "@/stores/currency-store";
+import { convertPrice, formatPrice } from "@/utils/currency";
 
 export function Cart() {
-	const router = useRouter()
-	const pathname = usePathname()
-	const [isDesktop, setIsDesktop] = useState(false)
-	const [mounted, setMounted] = useState(false)
-	const [isOpen, setIsOpen] = useState(false)
+	const router = useRouter();
+	const pathname = usePathname();
+	const [isDesktop, setIsDesktop] = useState(false);
+	const [mounted, setMounted] = useState(false);
+	const [isOpen, setIsOpen] = useState(false);
 
 	// Store de Zustand
-	const cartItems = useCartStore((state) => state.items)
-	const removeItem = useCartStore((state) => state.removeItem)
-	const updateQuantity = useCartStore((state) => state.updateQuantity)
-	const getTotalItems = useCartStore((state) => state.getTotalItems)
-	const getTotalPrice = useCartStore((state) => state.getTotalPrice)
-	const currency = useCurrencyStore((state) => state.currency)
-	const { data: exchangeRate } = useExchangeRate()
+	const cartItems = useCartStore((state) => state.items);
+	const removeItem = useCartStore((state) => state.removeItem);
+	const updateQuantity = useCartStore((state) => state.updateQuantity);
+	const getTotalItems = useCartStore((state) => state.getTotalItems);
+	const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+	const currency = useCurrencyStore((state) => state.currency);
+	const { data: exchangeRate } = useExchangeRate();
 
-	const itemCount = getTotalItems()
-	const baseTotalPrice = getTotalPrice()
-	const total = convertPrice(baseTotalPrice, currency, exchangeRate)
+	const itemCount = getTotalItems();
+	const baseTotalPrice = getTotalPrice();
+	const total = convertPrice(baseTotalPrice, currency, exchangeRate);
 
 	const handleCheckout = () => {
-		setIsOpen(false) // Close drawer/sheet
-		router.push("/checkout")
-	}
+		setIsOpen(false); // Close drawer/sheet
+		router.push("/checkout");
+	};
 
 	useEffect(() => {
-		setMounted(true)
+		setMounted(true);
 
 		const checkIsDesktop = () => {
-			setIsDesktop(window.matchMedia("(min-width: 768px)").matches)
-		}
+			setIsDesktop(window.matchMedia("(min-width: 768px)").matches);
+		};
 
 		// Check inicial
-		checkIsDesktop()
+		checkIsDesktop();
 
 		// Listener para cambios de tamaño
-		const mediaQuery = window.matchMedia("(min-width: 768px)")
-		mediaQuery.addEventListener("change", checkIsDesktop)
+		const mediaQuery = window.matchMedia("(min-width: 768px)");
+		mediaQuery.addEventListener("change", checkIsDesktop);
 
-		return () => mediaQuery.removeEventListener("change", checkIsDesktop)
-	}, [])
+		return () => mediaQuery.removeEventListener("change", checkIsDesktop);
+	}, []);
 
 	// Hide cart button on checkout page
 	if (pathname === "/checkout") {
-		return null
+		return null;
 	}
 
 	// Evitar hydration mismatch
@@ -90,7 +90,7 @@ export function Cart() {
 			<Button size="icon" variant="outline" disabled aria-hidden="true">
 				<ShoppingCart className="size-5" />
 			</Button>
-		)
+		);
 	}
 
 	const CartButton = (
@@ -107,7 +107,7 @@ export function Cart() {
 				</span>
 			)}
 		</Button>
-	)
+	);
 
 	const CartContent = (
 		<div className="space-y-3">
@@ -201,10 +201,25 @@ export function Cart() {
 
 								<div className="flex items-baseline gap-2">
 									<p className="text-lg font-bold text-primary">
-										{formatPrice(convertPrice(item.price * item.accounts * item.months * item.quantity, currency, exchangeRate), currency)}
+										{formatPrice(
+											convertPrice(
+												item.price *
+													item.accounts *
+													item.months *
+													item.quantity,
+												currency,
+												exchangeRate,
+											),
+											currency,
+										)}
 									</p>
 									<p className="text-xs text-muted-foreground">
-										({formatPrice(convertPrice(item.price, currency, exchangeRate), currency)}/mes × {item.accounts} × {item.months}{" "}
+										(
+										{formatPrice(
+											convertPrice(item.price, currency, exchangeRate),
+											currency,
+										)}
+										/mes × {item.accounts} × {item.months}{" "}
 										{item.months === 1 ? "mes" : "meses"})
 									</p>
 								</div>
@@ -214,7 +229,7 @@ export function Cart() {
 				</div>
 			)}
 		</div>
-	)
+	);
 
 	// Drawer para móvil
 	if (!isDesktop) {
@@ -259,7 +274,7 @@ export function Cart() {
 					</div>
 				</DrawerContent>
 			</Drawer>
-		)
+		);
 	}
 
 	// Sheet para desktop
@@ -304,8 +319,5 @@ export function Cart() {
 				</SheetFooter>
 			</SheetContent>
 		</Sheet>
-	)
+	);
 }
-
-
-

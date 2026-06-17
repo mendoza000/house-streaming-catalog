@@ -1,4 +1,4 @@
-import type { Currency } from "@/stores/currency-store"
+import type { Currency } from "@/stores/currency-store";
 
 /**
  * Format a number with thousand separators
@@ -7,7 +7,7 @@ function formatWithThousands(value: number, decimals = 2): string {
 	return value.toLocaleString("es-VE", {
 		minimumFractionDigits: decimals,
 		maximumFractionDigits: decimals,
-	})
+	});
 }
 
 /**
@@ -19,14 +19,14 @@ export function formatPrice(
 	decimals = 2,
 ): string {
 	// Round to specified decimals to avoid floating point issues
-	const roundedPrice = Math.round(price * 100) / 100
-	const formattedPrice = formatWithThousands(roundedPrice, decimals)
+	const roundedPrice = Math.round(price * 100) / 100;
+	const formattedPrice = formatWithThousands(roundedPrice, decimals);
 
 	if (currency === "USD") {
-		return `$${formattedPrice}`
+		return `$${formattedPrice}`;
 	}
 
-	return `${formattedPrice} Bs`
+	return `${formattedPrice} Bs`;
 }
 
 /**
@@ -38,21 +38,21 @@ export function convertPrice(
 	exchangeRate?: number,
 ): number {
 	if (currency === "VES" && exchangeRate) {
-		return usdPrice * exchangeRate
+		return usdPrice * exchangeRate;
 	}
-	return usdPrice
+	return usdPrice;
 }
 
 /**
  * Get currency symbol
  */
 export function getCurrencySymbol(currency: Currency): string {
-	return currency === "USD" ? "$" : "Bs"
+	return currency === "USD" ? "$" : "Bs";
 }
 
 /**
  * Get currency label
  */
 export function getCurrencyLabel(currency: Currency): string {
-	return currency === "USD" ? "USD" : "VES (Bolívares)"
+	return currency === "USD" ? "USD" : "VES (Bolívares)";
 }

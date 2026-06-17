@@ -1,7 +1,7 @@
-import { supabase } from "@/lib/supabase/client"
-import type { CreateOrderData } from "@/types/order-types"
-import type { Order, OrderInsert, OrderUpdate, Json } from "@/types/supabase"
-import { generateCartHash } from "@/utils/cart-hash"
+import { supabase } from "@/lib/supabase/client";
+import type { CreateOrderData } from "@/types/order-types";
+import type { Json, Order, OrderInsert, OrderUpdate } from "@/types/supabase";
+import { generateCartHash } from "@/utils/cart-hash";
 
 /**
  * Finds an existing draft order for a client with the same cart
@@ -22,23 +22,23 @@ export async function findDraftOrder(
 			.eq("status", "draft")
 			.order("created_at", { ascending: false })
 			.limit(1)
-			.maybeSingle()
+			.maybeSingle();
 
 		if (error) {
-			console.error("Error finding draft order:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error finding draft order:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
-		return { data: order, error: null }
+		return { data: order, error: null };
 	} catch (error) {
-		console.error("Unexpected error finding draft order:", error)
+		console.error("Unexpected error finding draft order:", error);
 		return {
 			data: null,
 			error:
 				error instanceof Error
 					? error
 					: new Error("Failed to find draft order"),
-		}
+		};
 	}
 }
 
@@ -51,13 +51,13 @@ export async function createOrUpdateDraftOrder(
 	data: CreateOrderData,
 ): Promise<{ data: Order | null; error: Error | null }> {
 	try {
-		const cartHash = generateCartHash(data.items)
+		const cartHash = generateCartHash(data.items);
 
 		// Buscar draft existente
 		const { data: existingDraft } = await findDraftOrder(
 			data.client_email,
 			cartHash,
-		)
+		);
 
 		if (existingDraft) {
 			// Actualizar draft existente
@@ -69,27 +69,27 @@ export async function createOrUpdateDraftOrder(
 				currency: data.currency,
 				items: data.items as unknown as Json,
 				cart_hash: cartHash,
-			}
-			
+			};
+
 			const { data: updatedOrder, error } = await supabase
 				.from("orders")
 				.update(updateData)
 				.eq("id", existingDraft.id)
 				.select("*")
-				.maybeSingle()
+				.maybeSingle();
 
 			if (error) {
-				console.error("Error updating draft order:", error)
-				return { data: null, error: new Error(error.message) }
+				console.error("Error updating draft order:", error);
+				return { data: null, error: new Error(error.message) };
 			}
 
 			// Si el UPDATE no retornó nada por RLS, retornar el draft original
 			if (!updatedOrder) {
-				console.error("UPDATE blocked by RLS, using existing draft")
-				return { data: existingDraft, error: null }
+				console.error("UPDATE blocked by RLS, using existing draft");
+				return { data: existingDraft, error: null };
 			}
 
-			return { data: updatedOrder, error: null }
+			return { data: updatedOrder, error: null };
 		} else {
 			// Crear nueva orden draft
 			const insertData: OrderInsert = {
@@ -102,30 +102,30 @@ export async function createOrUpdateDraftOrder(
 				items: data.items as unknown as Json,
 				cart_hash: cartHash,
 				status: "draft",
-			}
-			
+			};
+
 			const { data: newOrder, error } = await supabase
 				.from("orders")
 				.insert(insertData)
 				.select("*")
-				.single()
+				.single();
 
 			if (error) {
-				console.error("Error creating draft order:", error)
-				return { data: null, error: new Error(error.message) }
+				console.error("Error creating draft order:", error);
+				return { data: null, error: new Error(error.message) };
 			}
 
-			return { data: newOrder, error: null }
+			return { data: newOrder, error: null };
 		}
 	} catch (error) {
-		console.error("Unexpected error creating/updating draft order:", error)
+		console.error("Unexpected error creating/updating draft order:", error);
 		return {
 			data: null,
 			error:
 				error instanceof Error
 					? error
 					: new Error("Failed to create/update draft order"),
-		}
+		};
 	}
 }
 
@@ -142,21 +142,21 @@ export async function getOrder(
 			.from("orders")
 			.select("*")
 			.eq("id", orderId)
-			.single()
+			.single();
 
 		if (error) {
-			console.error("Error fetching order:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error fetching order:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
-		return { data: order, error: null }
+		return { data: order, error: null };
 	} catch (error) {
-		console.error("Unexpected error fetching order:", error)
+		console.error("Unexpected error fetching order:", error);
 		return {
 			data: null,
 			error:
 				error instanceof Error ? error : new Error("Failed to fetch order"),
-		}
+		};
 	}
 }
 
@@ -173,20 +173,20 @@ export async function getOrdersByEmail(
 			.from("orders")
 			.select("*")
 			.eq("client_email", email)
-			.order("created_at", { ascending: false })
+			.order("created_at", { ascending: false });
 
 		if (error) {
-			console.error("Error fetching orders by email:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error fetching orders by email:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
-		return { data: orders, error: null }
+		return { data: orders, error: null };
 	} catch (error) {
-		console.error("Unexpected error fetching orders:", error)
+		console.error("Unexpected error fetching orders:", error);
 		return {
 			data: null,
 			error:
 				error instanceof Error ? error : new Error("Failed to fetch orders"),
-		}
+		};
 	}
 }

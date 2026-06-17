@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { PaymentMethod } from "@/constants/payment-methods"
-import { useVerifyBinancePayment } from "@/hooks/orders/use-verify-binance-payment"
-import type { DeliveredAccount } from "@/types/delivery"
+import Image from "next/image";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { PaymentMethod } from "@/constants/payment-methods";
+import { useVerifyBinancePayment } from "@/hooks/orders/use-verify-binance-payment";
+import type { DeliveredAccount } from "@/types/delivery";
 
 interface BinancePaymentStepProps {
-	method: PaymentMethod
-	orderId: number
+	method: PaymentMethod;
+	orderId: number;
 	/** Se llama SOLO cuando el server confirmó el pago, con lo entregado. */
-	onVerify: (delivered: DeliveredAccount[]) => void
-	onBack: () => void
+	onVerify: (delivered: DeliveredAccount[]) => void;
+	onBack: () => void;
 	/** Opcional: aviso de que expiró el tiempo (no completa la orden). */
-	onTimeout?: () => void
+	onTimeout?: () => void;
 }
 
 /** Cada cuánto consultamos a Binance en segundo plano. Weight alto → no bajar de ~15s. */
-const POLL_INTERVAL_MS = 15_000
+const POLL_INTERVAL_MS = 15_000;
 
 export function BinancePaymentStep({
 	method,
@@ -28,30 +28,30 @@ export function BinancePaymentStep({
 	onBack,
 	onTimeout,
 }: BinancePaymentStepProps) {
-	const initialTime = method.verificationTimeSeconds ?? 300
-	const [timeLeft, setTimeLeft] = useState(initialTime)
-	const [expired, setExpired] = useState(false)
-	const [statusMessage, setStatusMessage] = useState<string | null>(null)
+	const initialTime = method.verificationTimeSeconds ?? 300;
+	const [timeLeft, setTimeLeft] = useState(initialTime);
+	const [expired, setExpired] = useState(false);
+	const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-	const { verify, isVerifying } = useVerifyBinancePayment()
+	const { verify, isVerifying } = useVerifyBinancePayment();
 
-	const orderCode = `ord-${orderId}`
+	const orderCode = `ord-${orderId}`;
 
 	const formatTime = useCallback((seconds: number) => {
-		const mins = Math.floor(seconds / 60)
-		const secs = seconds % 60
-		return `${mins}:${secs.toString().padStart(2, "0")}`
-	}, [])
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins}:${secs.toString().padStart(2, "0")}`;
+	}, []);
 
 	const runVerify = useCallback(
 		async (silent: boolean) => {
-			if (!silent) setStatusMessage(null)
+			if (!silent) setStatusMessage(null);
 
-			const result = await verify(orderId)
+			const result = await verify(orderId);
 
 			if (result?.matched) {
-				onVerify(result.delivered ?? [])
-				return
+				onVerify(result.delivered ?? []);
+				return;
 			}
 
 			// En modo silencioso (auto-poll) no molestamos con mensajes.
@@ -60,43 +60,43 @@ export function BinancePaymentStep({
 					result === null
 						? "No pudimos verificar el pago. Probá de nuevo en unos segundos."
 						: "Aún no detectamos tu pago. Si ya pagaste, esperá unos segundos y volvé a verificar.",
-				)
+				);
 			}
 		},
 		[verify, orderId, onVerify],
-	)
+	);
 
 	// Ref estable para que los intervals siempre llamen a la última versión.
-	const runVerifyRef = useRef(runVerify)
-	runVerifyRef.current = runVerify
+	const runVerifyRef = useRef(runVerify);
+	runVerifyRef.current = runVerify;
 
 	// Cuenta regresiva. Al llegar a 0 NO se valida nada: solo marca expirado.
 	useEffect(() => {
-		if (expired) return
+		if (expired) return;
 
 		if (timeLeft <= 0) {
-			setExpired(true)
-			onTimeout?.()
-			return
+			setExpired(true);
+			onTimeout?.();
+			return;
 		}
 
 		const timer = setInterval(() => {
-			setTimeLeft((prev) => prev - 1)
-		}, 1000)
+			setTimeLeft((prev) => prev - 1);
+		}, 1000);
 
-		return () => clearInterval(timer)
-	}, [timeLeft, expired, onTimeout])
+		return () => clearInterval(timer);
+	}, [timeLeft, expired, onTimeout]);
 
 	// Auto-poll a Binance mientras el contador corre.
 	useEffect(() => {
-		if (expired) return
+		if (expired) return;
 
 		const poll = setInterval(() => {
-			runVerifyRef.current(true)
-		}, POLL_INTERVAL_MS)
+			runVerifyRef.current(true);
+		}, POLL_INTERVAL_MS);
 
-		return () => clearInterval(poll)
-	}, [expired])
+		return () => clearInterval(poll);
+	}, [expired]);
 
 	return (
 		<Card>
@@ -188,5 +188,5 @@ export function BinancePaymentStep({
 				</div>
 			</CardContent>
 		</Card>
-	)
+	);
 }

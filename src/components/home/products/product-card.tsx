@@ -1,8 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import { ShoppingCart } from "lucide-react"
+import { ShoppingCart } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -10,32 +12,30 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { AddToCartModal } from "./add-to-cart-modal"
-import type { Product } from "@/constants/products"
-import { useCurrencyStore } from "@/stores/currency-store"
-import { formatPrice } from "@/utils/currency"
+} from "@/components/ui/card";
+import type { Product } from "@/constants/products";
+import { useCurrencyStore } from "@/stores/currency-store";
+import { formatPrice } from "@/utils/currency";
+import { AddToCartModal } from "./add-to-cart-modal";
 
 interface ProductCardProps {
-	product: Product
-	onAddToCart?: (product: Product, accounts: number, months: number) => void
+	product: Product;
+	onAddToCart?: (product: Product, accounts: number, months: number) => void;
 }
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
-	const [isModalOpen, setIsModalOpen] = useState(false)
-	const currency = useCurrencyStore((state) => state.currency)
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const currency = useCurrencyStore((state) => state.currency);
 
 	// Bajo pedido: no se gestiona stock, se consulta al admin antes de pagar.
-	const isByRequest = product.byRequest === true
+	const isByRequest = product.byRequest === true;
 	// available undefined = todavía sin dato de stock (no bloqueamos).
-	const hasStockData = !isByRequest && product.available !== undefined
-	const isSoldOut = hasStockData && (product.available ?? 0) <= 0
+	const hasStockData = !isByRequest && product.available !== undefined;
+	const isSoldOut = hasStockData && (product.available ?? 0) <= 0;
 
 	const handleConfirm = (accounts: number, months: number) => {
-		onAddToCart?.(product, accounts, months)
-	}
+		onAddToCart?.(product, accounts, months);
+	};
 
 	return (
 		<>
@@ -79,7 +79,8 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 							<Badge variant="destructive">Agotado</Badge>
 						) : (
 							<Badge variant="outline">
-								{product.available} disponible{product.available === 1 ? "" : "s"}
+								{product.available} disponible
+								{product.available === 1 ? "" : "s"}
 							</Badge>
 						))
 					)}
@@ -103,5 +104,5 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 				onConfirm={handleConfirm}
 			/>
 		</>
-	)
+	);
 }

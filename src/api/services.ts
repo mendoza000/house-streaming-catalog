@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabase/client"
-import type { Service } from "@/types/supabase"
+import { supabase } from "@/lib/supabase/client";
+import type { Service } from "@/types/supabase";
 
 /**
  * Fetch all services from Supabase
@@ -10,10 +10,10 @@ export async function getServices(): Promise<Service[]> {
 		.from("services")
 		.select("*")
 		.eq("hidden", false)
-		.order("id", { ascending: true })
+		.order("id", { ascending: true });
 
-	if (error) throw error
-	return data ?? []
+	if (error) throw error;
+	return data ?? [];
 }
 
 /**
@@ -23,17 +23,17 @@ export async function getServices(): Promise<Service[]> {
 export async function getServiceStock(): Promise<Record<number, number>> {
 	const { data, error } = await supabase
 		.from("service_stock")
-		.select("service_id, available")
+		.select("service_id, available");
 
-	if (error) throw error
+	if (error) throw error;
 
-	const stock: Record<number, number> = {}
+	const stock: Record<number, number> = {};
 	for (const row of data ?? []) {
 		if (row.service_id != null) {
-			stock[row.service_id] = row.available ?? 0
+			stock[row.service_id] = row.available ?? 0;
 		}
 	}
-	return stock
+	return stock;
 }
 
 /**
@@ -45,8 +45,8 @@ export async function getServiceById(id: number): Promise<Service | null> {
 		.select("*")
 		.eq("id", id)
 		.eq("hidden", false)
-		.single()
+		.single();
 
-	if (error) throw error
-	return data
+	if (error) throw error;
+	return data;
 }

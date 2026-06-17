@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { CheckCircle2, Loader2, XCircle } from "lucide-react"
-import { useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	type AvailabilityClient,
 	type AvailabilityItem,
 	useAvailabilityCheck,
-} from "@/hooks/orders/use-availability-check"
+} from "@/hooks/orders/use-availability-check";
 
 interface AvailabilityCheckStepProps {
-	items: AvailabilityItem[]
-	client: AvailabilityClient
-	onAllAvailable: () => void
-	onBack: () => void
+	items: AvailabilityItem[];
+	client: AvailabilityClient;
+	onAllAvailable: () => void;
+	onBack: () => void;
 }
 
 export function AvailabilityCheckStep({
@@ -23,17 +23,20 @@ export function AvailabilityCheckStep({
 	onAllAvailable,
 	onBack,
 }: AvailabilityCheckStepProps) {
-	const { phase, results, start } = useAvailabilityCheck()
+	const { phase, results, start } = useAvailabilityCheck();
 
 	// Arrancar la consulta una sola vez.
-	const startedRef = useRef(false)
+	const startedRef = useRef(false);
 	useEffect(() => {
-		if (startedRef.current) return
-		startedRef.current = true
-		start(items, client)
-	}, [start, items, client])
+		if (startedRef.current) return;
+		startedRef.current = true;
+		start(items, client);
+	}, [start, items, client]);
 
-	const rows = results.length > 0 ? results : items.map((i) => ({ ...i, status: "pending" as const }))
+	const rows =
+		results.length > 0
+			? results
+			: items.map((i) => ({ ...i, status: "pending" as const }));
 
 	return (
 		<Card>
@@ -121,5 +124,5 @@ export function AvailabilityCheckStep({
 				</div>
 			</CardContent>
 		</Card>
-	)
+	);
 }

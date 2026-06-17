@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { ButtonGroup } from "@/components/ui/button-group"
-import { Button } from "@/components/ui/button"
-import { useCurrencyStore, type Currency } from "@/stores/currency-store"
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { type Currency, useCurrencyStore } from "@/stores/currency-store";
 
-const currencies: Currency[] = ["USD", "VES"]
+const currencies: Currency[] = ["USD", "VES"];
 
 const currencyLabels: Record<Currency, string> = {
 	USD: "USD ($)",
 	VES: "VES (Bs)",
-}
+};
 
 export function CurrencySelector() {
-	const currency = useCurrencyStore((state) => state.currency)
-	const setCurrency = useCurrencyStore((state) => state.setCurrency)
+	const currency = useCurrencyStore((state) => state.currency);
+	const setCurrency = useCurrencyStore((state) => state.setCurrency);
 
 	return (
 		<div className="flex items-center gap-2">
@@ -31,5 +31,5 @@ export function CurrencySelector() {
 				))}
 			</ButtonGroup>
 		</div>
-	)
+	);
 }

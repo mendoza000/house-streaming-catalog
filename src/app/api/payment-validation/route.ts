@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createPaymentValidationRequest } from "@/api/availability"
+import { type NextRequest, NextResponse } from "next/server";
+import { createPaymentValidationRequest } from "@/api/availability";
 
 /**
  * POST /api/payment-validation
@@ -10,17 +10,17 @@ import { createPaymentValidationRequest } from "@/api/availability"
  */
 export async function POST(request: NextRequest) {
 	try {
-		const body = await request.json()
-		const { orderId, clientName, clientPhone, receiptUrl, description } = body
+		const body = await request.json();
+		const { orderId, clientName, clientPhone, receiptUrl, description } = body;
 
 		if (typeof orderId !== "number" || !Number.isInteger(orderId)) {
-			return NextResponse.json({ error: "Invalid orderId" }, { status: 400 })
+			return NextResponse.json({ error: "Invalid orderId" }, { status: 400 });
 		}
 		if (typeof receiptUrl !== "string" || receiptUrl.trim() === "") {
 			return NextResponse.json(
 				{ error: "receiptUrl is required" },
 				{ status: 400 },
-			)
+			);
 		}
 
 		const { data, error } = await createPaymentValidationRequest({
@@ -29,18 +29,18 @@ export async function POST(request: NextRequest) {
 			clientPhone: typeof clientPhone === "string" ? clientPhone : "",
 			receiptUrl,
 			description: typeof description === "string" ? description : "",
-		})
+		});
 
 		if (error) {
-			return NextResponse.json({ error: error.message }, { status: 500 })
+			return NextResponse.json({ error: error.message }, { status: 500 });
 		}
 
-		return NextResponse.json({ ticketId: data?.ticketId })
+		return NextResponse.json({ ticketId: data?.ticketId });
 	} catch (error) {
-		console.error("Payment validation create error:", error)
+		console.error("Payment validation create error:", error);
 		return NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },
-		)
+		);
 	}
 }

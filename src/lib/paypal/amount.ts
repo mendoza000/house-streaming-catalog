@@ -1,4 +1,4 @@
-import { getExchangeRate } from "@/api/exchange-rate"
+import { getExchangeRate } from "@/api/exchange-rate";
 
 /**
  * Monto USD a cobrar por PayPal, derivado SIEMPRE de la orden en DB (no del
@@ -7,15 +7,15 @@ import { getExchangeRate } from "@/api/exchange-rate"
  * y capture-order para re-verificar el monto capturado.
  */
 export async function expectedUsdAmount(order: {
-	amount: number | null
-	currency: string | null
+	amount: number | null;
+	currency: string | null;
 }): Promise<number> {
 	if (order.amount == null) {
-		throw new Error("Order has no amount")
+		throw new Error("Order has no amount");
 	}
 	if (order.currency === "VES") {
-		const rate = await getExchangeRate() // VES por 1 USDT/USD
-		return order.amount / rate
+		const rate = await getExchangeRate(); // VES por 1 USDT/USD
+		return order.amount / rate;
 	}
-	return order.amount
+	return order.amount;
 }

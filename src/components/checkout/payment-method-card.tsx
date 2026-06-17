@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import {
 	Card,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card"
-import type { PaymentMethod } from "@/constants/payment-methods"
+} from "@/components/ui/card";
+import type { PaymentMethod } from "@/constants/payment-methods";
 
 interface PaymentMethodCardProps {
-	method: PaymentMethod
-	isSelected: boolean
-	onSelect: () => void
+	method: PaymentMethod;
+	isSelected: boolean;
+	onSelect: () => void;
 }
 
 export function PaymentMethodCard({
@@ -49,5 +49,5 @@ export function PaymentMethodCard({
 				</div>
 			</CardHeader>
 		</Card>
-	)
+	);
 }

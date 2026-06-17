@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { yupResolver } from "@hookform/resolvers/yup"
-import * as yup from "yup"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { User, Mail } from "lucide-react"
-import PhoneInputWithCountry from "react-phone-number-input/react-hook-form"
-import { isValidPhoneNumber } from "react-phone-number-input"
-import "react-phone-number-input/style.css"
-import { CountrySelect } from "@/components/checkout/country-select"
-import type { ClientFormData } from "@/types/order-types"
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Mail, User } from "lucide-react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import PhoneInputWithCountry from "react-phone-number-input/react-hook-form";
+import * as yup from "yup";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import "react-phone-number-input/style.css";
+import { CountrySelect } from "@/components/checkout/country-select";
+import type { ClientFormData } from "@/types/order-types";
 
 interface ClientInfoFormProps {
-	onValidChange: (isValid: boolean, data: ClientFormData) => void
+	onValidChange: (isValid: boolean, data: ClientFormData) => void;
 }
 
 // Yup validation schema
@@ -37,7 +37,7 @@ const clientFormSchema = yup.object({
 		.test("valid-phone", "Ingresa un número de teléfono válido", (value) =>
 			value ? isValidPhoneNumber(value) : false,
 		),
-})
+});
 
 export function ClientInfoForm({ onValidChange }: ClientInfoFormProps) {
 	const {
@@ -53,15 +53,15 @@ export function ClientInfoForm({ onValidChange }: ClientInfoFormProps) {
 			email: "",
 			phone: "",
 		},
-	})
+	});
 
 	// Watch all form values
-	const formData = watch()
+	const formData = watch();
 
 	// Notify parent when form validity or data changes
 	useEffect(() => {
-		onValidChange(isValid, formData)
-	}, [isValid, formData, onValidChange])
+		onValidChange(isValid, formData);
+	}, [isValid, formData, onValidChange]);
 
 	return (
 		<Card>
@@ -145,5 +145,5 @@ export function ClientInfoForm({ onValidChange }: ClientInfoFormProps) {
 				</p>
 			</CardContent>
 		</Card>
-	)
+	);
 }

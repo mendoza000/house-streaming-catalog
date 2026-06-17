@@ -1,39 +1,39 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { useCartStore } from "@/stores/cart-store"
-import { useCurrencyStore } from "@/stores/currency-store"
-import { useServices } from "@/hooks/services/use-services"
-import { useServiceStock } from "@/hooks/services/use-service-stock"
-import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate"
-import { SearchBar } from "./search-bar"
-import { CategoryFilter } from "./category-filter"
-import { CurrencySelector } from "./currency-selector"
-import { ProductCard } from "./product-card"
-import type { Product } from "@/constants/products"
+import { useMemo, useState } from "react";
+import type { Product } from "@/constants/products";
+import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate";
+import { useServiceStock } from "@/hooks/services/use-service-stock";
+import { useServices } from "@/hooks/services/use-services";
+import { useCartStore } from "@/stores/cart-store";
+import { useCurrencyStore } from "@/stores/currency-store";
+import { CategoryFilter } from "./category-filter";
+import { CurrencySelector } from "./currency-selector";
+import { ProductCard } from "./product-card";
+import { SearchBar } from "./search-bar";
 
 export default function Products() {
-	const [searchQuery, setSearchQuery] = useState("")
-	const [selectedCategory, setSelectedCategory] = useState<string>("Todos")
-	const addItem = useCartStore((state) => state.addItem)
-	const currency = useCurrencyStore((state) => state.currency)
+	const [searchQuery, setSearchQuery] = useState("");
+	const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
+	const addItem = useCartStore((state) => state.addItem);
+	const currency = useCurrencyStore((state) => state.currency);
 
-	const { data: services, isLoading, error } = useServices()
-	const { data: stock } = useServiceStock()
-	const { data: exchangeRate } = useExchangeRate()
+	const { data: services, isLoading, error } = useServices();
+	const { data: stock } = useServiceStock();
+	const { data: exchangeRate } = useExchangeRate();
 
 	const filteredProducts = useMemo(() => {
-		if (!services) return []
+		if (!services) return [];
 
 		return services
 			.map((service): Product => {
 				// Store base price in USD for cart
-				const basePrice = service.screen_price ?? 0
+				const basePrice = service.screen_price ?? 0;
 				// Convert price for display if VES is selected and exchange rate is available
 				const displayPrice =
 					currency === "VES" && exchangeRate
 						? basePrice * exchangeRate
-						: basePrice
+						: basePrice;
 
 				return {
 					id: service.id.toString(),
@@ -46,27 +46,27 @@ export default function Products() {
 					byRequest: service.is_by_request,
 					// Los bajo pedido no exponen stock (se consulta al admin).
 					available: service.is_by_request ? undefined : stock?.[service.id],
-				}
+				};
 			})
 			.filter((product) => {
 				const matchesSearch = product.name
 					.toLowerCase()
-					.includes(searchQuery.toLowerCase())
+					.includes(searchQuery.toLowerCase());
 				const matchesCategory =
-					selectedCategory === "Todos" || product.category === selectedCategory
+					selectedCategory === "Todos" || product.category === selectedCategory;
 
-				return matchesSearch && matchesCategory
-			})
-	}, [searchQuery, selectedCategory, services, currency, exchangeRate, stock])
+				return matchesSearch && matchesCategory;
+			});
+	}, [searchQuery, selectedCategory, services, currency, exchangeRate, stock]);
 
 	// Categorías reales presentes en los servicios (+ "Todos").
 	const categories = useMemo(() => {
-		const set = new Set<string>()
+		const set = new Set<string>();
 		for (const service of services ?? []) {
-			set.add(service.category ?? "Otros")
+			set.add(service.category ?? "Otros");
 		}
-		return ["Todos", ...Array.from(set).sort()]
-	}, [services])
+		return ["Todos", ...Array.from(set).sort()];
+	}, [services]);
 
 	const handleAddToCart = (
 		product: (typeof filteredProducts)[0],
@@ -80,8 +80,8 @@ export default function Products() {
 			image: product.image,
 			accounts,
 			months,
-		})
-	}
+		});
+	};
 
 	if (isLoading) {
 		return (
@@ -97,7 +97,7 @@ export default function Products() {
 					</div>
 				</div>
 			</section>
-		)
+		);
 	}
 
 	if (error) {
@@ -119,7 +119,7 @@ export default function Products() {
 					</div>
 				</div>
 			</section>
-		)
+		);
 	}
 
 	return (
@@ -171,5 +171,5 @@ export default function Products() {
 				Mostrando {filteredProducts.length} de {services?.length ?? 0} productos
 			</div>
 		</section>
-	)
+	);
 }

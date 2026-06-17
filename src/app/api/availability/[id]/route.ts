@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getAvailabilityStatus } from "@/api/availability"
+import { type NextRequest, NextResponse } from "next/server";
+import { getAvailabilityStatus } from "@/api/availability";
 
 /**
  * GET /api/availability/[id]
@@ -11,21 +11,21 @@ export async function GET(
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
-		const { id } = await params
+		const { id } = await params;
 
-		const { data, error } = await getAvailabilityStatus(id)
+		const { data, error } = await getAvailabilityStatus(id);
 
 		if (error) {
-			const status = error.message === "Ticket not found" ? 404 : 500
-			return NextResponse.json({ error: error.message }, { status })
+			const status = error.message === "Ticket not found" ? 404 : 500;
+			return NextResponse.json({ error: error.message }, { status });
 		}
 
-		return NextResponse.json(data)
+		return NextResponse.json(data);
 	} catch (error) {
-		console.error("Availability status error:", error)
+		console.error("Availability status error:", error);
 		return NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },
-		)
+		);
 	}
 }

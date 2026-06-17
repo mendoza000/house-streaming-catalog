@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import { ShoppingCart, Users, Calendar } from "lucide-react"
+import { Calendar, ShoppingCart, Users } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -10,19 +11,18 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import type { Product } from "@/constants/products"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import type { Product } from "@/constants/products";
 
 interface AddToCartModalProps {
-	product: Product
-	open: boolean
-	onOpenChange: (open: boolean) => void
-	onConfirm: (accounts: number, months: number) => void
+	product: Product;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	onConfirm: (accounts: number, months: number) => void;
 }
 
-const MONTHS_OPTIONS = [1, 2, 3, 6] as const
+const MONTHS_OPTIONS = [1, 2, 3, 6] as const;
 
 export function AddToCartModal({
 	product,
@@ -30,29 +30,29 @@ export function AddToCartModal({
 	onOpenChange,
 	onConfirm,
 }: AddToCartModalProps) {
-	const [accountsInput, setAccountsInput] = useState("1")
-	const [months, setMonths] = useState<number>(1)
+	const [accountsInput, setAccountsInput] = useState("1");
+	const [months, setMonths] = useState<number>(1);
 
-	const accounts = Number.parseInt(accountsInput, 10) || 0
-	const maxAccounts = product.available // undefined = sin límite conocido
-	const exceedsStock = maxAccounts !== undefined && accounts > maxAccounts
-	const isAccountsValid = accounts >= 1 && !exceedsStock
+	const accounts = Number.parseInt(accountsInput, 10) || 0;
+	const maxAccounts = product.available; // undefined = sin límite conocido
+	const exceedsStock = maxAccounts !== undefined && accounts > maxAccounts;
+	const isAccountsValid = accounts >= 1 && !exceedsStock;
 
 	const handleConfirm = () => {
-		if (!isAccountsValid) return
+		if (!isAccountsValid) return;
 
-		onConfirm(accounts, months)
-		onOpenChange(false)
+		onConfirm(accounts, months);
+		onOpenChange(false);
 		// Reset to defaults
-		setAccountsInput("1")
-		setMonths(1)
-	}
+		setAccountsInput("1");
+		setMonths(1);
+	};
 
-	const subtotal = isAccountsValid ? product.price * accounts * months : 0
+	const subtotal = isAccountsValid ? product.price * accounts * months : 0;
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[500px]">
+			<DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle className="text-2xl font-bold">
 						Configurar producto
@@ -214,5 +214,5 @@ export function AddToCartModal({
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
-	)
+	);
 }

@@ -1,5 +1,5 @@
-import { supabaseAdmin } from "@/lib/supabase/admin"
-import type { TicketInsert } from "@/types/supabase"
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import type { TicketInsert } from "@/types/supabase";
 
 /**
  * Consultas de disponibilidad para servicios BAJO PEDIDO, server-only.
@@ -11,12 +11,12 @@ import type { TicketInsert } from "@/types/supabase"
  */
 
 export interface CreateAvailabilityInput {
-	serviceId: number
-	clientName: string
-	clientPhone: string
-	months: number
+	serviceId: number;
+	clientName: string;
+	clientPhone: string;
+	months: number;
 	/** Agrupa las consultas de un mismo checkout. */
-	cartId?: string
+	cartId?: string;
 }
 
 export async function createAvailabilityRequest(
@@ -37,39 +37,39 @@ export async function createAvailabilityRequest(
 			receipt_url: "",
 			telegram_msg_id: 0,
 			cart_id: input.cartId ?? null,
-		}
+		};
 
 		const { data, error } = await supabaseAdmin
 			.from("tickets")
 			.insert(insert)
 			.select("id")
-			.single()
+			.single();
 
 		if (error) {
-			console.error("Error creating availability request:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error creating availability request:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
-		return { data: { ticketId: data.id }, error: null }
+		return { data: { ticketId: data.id }, error: null };
 	} catch (error) {
-		console.error("Unexpected error creating availability request:", error)
+		console.error("Unexpected error creating availability request:", error);
 		return {
 			data: null,
 			error:
 				error instanceof Error
 					? error
 					: new Error("Failed to create availability request"),
-		}
+		};
 	}
 }
 
 export interface CreatePaymentValidationInput {
-	orderId: number
-	clientName: string
-	clientPhone: string
-	receiptUrl: string
+	orderId: number;
+	clientName: string;
+	clientPhone: string;
+	receiptUrl: string;
 	/** Resumen para que el admin sepa qué está validando. */
-	description: string
+	description: string;
 }
 
 /**
@@ -92,17 +92,17 @@ export async function createPaymentValidationRequest(
 			description: input.description,
 			screen_number: 0,
 			telegram_msg_id: 0,
-		}
+		};
 
 		const { data, error } = await supabaseAdmin
 			.from("tickets")
 			.insert(insert)
 			.select("id")
-			.single()
+			.single();
 
 		if (error) {
-			console.error("Error creating payment validation request:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error creating payment validation request:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 
 		// Marcar la orden en revisión (server-side: bypassa la RLS que solo deja
@@ -111,26 +111,29 @@ export async function createPaymentValidationRequest(
 			.from("orders")
 			.update({ status: "validating" })
 			.eq("id", input.orderId)
-			.neq("status", "completed")
+			.neq("status", "completed");
 
-		return { data: { ticketId: data.id }, error: null }
+		return { data: { ticketId: data.id }, error: null };
 	} catch (error) {
-		console.error("Unexpected error creating payment validation request:", error)
+		console.error(
+			"Unexpected error creating payment validation request:",
+			error,
+		);
 		return {
 			data: null,
 			error:
 				error instanceof Error
 					? error
 					: new Error("Failed to create payment validation request"),
-		}
+		};
 	}
 }
 
 export interface AvailabilityStatus {
 	/** pending | resolved | approved | rejected ... */
-	status: string | null
+	status: string | null;
 	/** available | not_available | null (aún sin responder) */
-	resolvedAction: string | null
+	resolvedAction: string | null;
 }
 
 export async function getAvailabilityStatus(
@@ -141,28 +144,28 @@ export async function getAvailabilityStatus(
 			.from("tickets")
 			.select("status, resolved_action")
 			.eq("id", ticketId)
-			.maybeSingle()
+			.maybeSingle();
 
 		if (error) {
-			console.error("Error fetching availability status:", error)
-			return { data: null, error: new Error(error.message) }
+			console.error("Error fetching availability status:", error);
+			return { data: null, error: new Error(error.message) };
 		}
 		if (!data) {
-			return { data: null, error: new Error("Ticket not found") }
+			return { data: null, error: new Error("Ticket not found") };
 		}
 
 		return {
 			data: { status: data.status, resolvedAction: data.resolved_action },
 			error: null,
-		}
+		};
 	} catch (error) {
-		console.error("Unexpected error fetching availability status:", error)
+		console.error("Unexpected error fetching availability status:", error);
 		return {
 			data: null,
 			error:
 				error instanceof Error
 					? error
 					: new Error("Failed to fetch availability status"),
-		}
+		};
 	}
 }

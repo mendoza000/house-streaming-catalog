@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { PaymentMethod } from "@/constants/payment-methods"
-import Image from "next/image"
-import { useCartStore } from "@/stores/cart-store"
-import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate"
-import { formatPrice, convertPrice } from "@/utils/currency"
-import { useReceiptUpload } from "@/hooks/receipts/use-receipt-upload"
-import { toast } from "sonner"
-import type { ReceiptUploadError } from "@/types/receipt"
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { PaymentMethod } from "@/constants/payment-methods";
+import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate";
+import { useReceiptUpload } from "@/hooks/receipts/use-receipt-upload";
+import { useCartStore } from "@/stores/cart-store";
+import type { ReceiptUploadError } from "@/types/receipt";
+import { convertPrice, formatPrice } from "@/utils/currency";
 
 interface PagoMovilPaymentStepProps {
-	method: PaymentMethod
-	onSubmit: (receiptUrl: string) => void
-	onBack: () => void
+	method: PaymentMethod;
+	onSubmit: (receiptUrl: string) => void;
+	onBack: () => void;
 }
 
 export function PagoMovilPaymentStep({
@@ -23,51 +23,51 @@ export function PagoMovilPaymentStep({
 	onSubmit,
 	onBack,
 }: PagoMovilPaymentStepProps) {
-	const [selectedImage, setSelectedImage] = useState<File | null>(null)
-	const [imagePreview, setImagePreview] = useState<string | null>(null)
-	const fileInputRef = useRef<HTMLInputElement>(null)
+	const [selectedImage, setSelectedImage] = useState<File | null>(null);
+	const [imagePreview, setImagePreview] = useState<string | null>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Get cart total and convert to VES
-	const getTotalPrice = useCartStore((state) => state.getTotalPrice)
-	const { data: exchangeRate } = useExchangeRate()
-	const baseTotalPrice = getTotalPrice()
-	const totalInVES = convertPrice(baseTotalPrice, "VES", exchangeRate)
+	const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+	const { data: exchangeRate } = useExchangeRate();
+	const baseTotalPrice = getTotalPrice();
+	const totalInVES = convertPrice(baseTotalPrice, "VES", exchangeRate);
 
 	// Upload mutation
-	const uploadMutation = useReceiptUpload()
+	const uploadMutation = useReceiptUpload();
 
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0]
+		const file = e.target.files?.[0];
 		if (file) {
-			setSelectedImage(file)
-			const reader = new FileReader()
+			setSelectedImage(file);
+			const reader = new FileReader();
 			reader.onloadend = () => {
-				setImagePreview(reader.result as string)
-			}
-			reader.readAsDataURL(file)
+				setImagePreview(reader.result as string);
+			};
+			reader.readAsDataURL(file);
 		}
-	}
+	};
 
 	const handleSubmit = async () => {
-		if (!selectedImage) return
+		if (!selectedImage) return;
 
 		try {
-			const result = await uploadMutation.mutateAsync(selectedImage)
-			toast.success("Comprobante subido exitosamente")
-			onSubmit(result.publicUrl)
+			const result = await uploadMutation.mutateAsync(selectedImage);
+			toast.success("Comprobante subido exitosamente");
+			onSubmit(result.publicUrl);
 		} catch (error) {
-			const uploadError = error as ReceiptUploadError
-			toast.error(uploadError.message || "Error al subir el comprobante")
+			const uploadError = error as ReceiptUploadError;
+			toast.error(uploadError.message || "Error al subir el comprobante");
 		}
-	}
+	};
 
 	const handleRemoveImage = () => {
-		setSelectedImage(null)
-		setImagePreview(null)
+		setSelectedImage(null);
+		setImagePreview(null);
 		if (fileInputRef.current) {
-			fileInputRef.current.value = ""
+			fileInputRef.current.value = "";
 		}
-	}
+	};
 
 	return (
 		<Card>
@@ -180,8 +180,8 @@ export function PagoMovilPaymentStep({
 								variant="ghost"
 								size="sm"
 								onClick={(e) => {
-									e.stopPropagation()
-									handleRemoveImage()
+									e.stopPropagation();
+									handleRemoveImage();
 								}}
 							>
 								Eliminar
@@ -207,5 +207,5 @@ export function PagoMovilPaymentStep({
 				</div>
 			</CardContent>
 		</Card>
-	)
+	);
 }

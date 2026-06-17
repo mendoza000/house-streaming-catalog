@@ -1,28 +1,28 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { ShoppingCart, Users, Calendar } from "lucide-react"
-import { useCartStore } from "@/stores/cart-store"
-import { useCurrencyStore } from "@/stores/currency-store"
-import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate"
-import { formatPrice, convertPrice } from "@/utils/currency"
+import { Calendar, ShoppingCart, Users } from "lucide-react";
+import Image from "next/image";
 import {
 	Card,
 	CardContent,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate";
+import { useCartStore } from "@/stores/cart-store";
+import { useCurrencyStore } from "@/stores/currency-store";
+import { convertPrice, formatPrice } from "@/utils/currency";
 
 export function CheckoutSummary() {
-	const cartItems = useCartStore((state) => state.items)
-	const getTotalPrice = useCartStore((state) => state.getTotalPrice)
-	const currency = useCurrencyStore((state) => state.currency)
-	const { data: exchangeRate } = useExchangeRate()
+	const cartItems = useCartStore((state) => state.items);
+	const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+	const currency = useCurrencyStore((state) => state.currency);
+	const { data: exchangeRate } = useExchangeRate();
 
-	const baseTotalPrice = getTotalPrice()
-	const total = convertPrice(baseTotalPrice, currency, exchangeRate)
+	const baseTotalPrice = getTotalPrice();
+	const total = convertPrice(baseTotalPrice, currency, exchangeRate);
 
 	if (cartItems.length === 0) {
 		return (
@@ -37,7 +37,7 @@ export function CheckoutSummary() {
 					</p>
 				</CardContent>
 			</Card>
-		)
+		);
 	}
 
 	return (
@@ -88,14 +88,28 @@ export function CheckoutSummary() {
 										</span>
 									</div>
 									<p className="text-xs text-muted-foreground mt-1">
-										{formatPrice(convertPrice(item.price, currency, exchangeRate), currency)}/mes × {item.accounts} × {item.months}m
+										{formatPrice(
+											convertPrice(item.price, currency, exchangeRate),
+											currency,
+										)}
+										/mes × {item.accounts} × {item.months}m
 									</p>
 								</div>
 
 								{/* Price */}
 								<div className="text-right">
 									<p className="font-bold text-primary">
-										{formatPrice(convertPrice(item.price * item.accounts * item.months * item.quantity, currency, exchangeRate), currency)}
+										{formatPrice(
+											convertPrice(
+												item.price *
+													item.accounts *
+													item.months *
+													item.quantity,
+												currency,
+												exchangeRate,
+											),
+											currency,
+										)}
 									</p>
 								</div>
 							</div>
@@ -114,8 +128,5 @@ export function CheckoutSummary() {
 				</div>
 			</CardFooter>
 		</Card>
-	)
+	);
 }
-
-
-
