@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import { CheckCircle2 } from "lucide-react"
-import Link from "next/link"
-import { DeliveredAccountsCard } from "@/components/orden/delivered-accounts-card"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { DeliveredAccount } from "@/types/delivery"
-import type { OrderInfo } from "@/types/order-types"
+import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { DeliveredAccountsCard } from "@/components/orden/delivered-accounts-card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { DeliveredAccount } from "@/types/delivery";
+import type { OrderInfo } from "@/types/order-types";
 
 interface OrderConfirmationStepProps {
-	orderInfo: OrderInfo
+	orderInfo: OrderInfo;
 	/** Pantallas entregadas. Vacío = pago OK pero entrega pendiente. */
-	deliveredAccounts?: DeliveredAccount[]
+	deliveredAccounts?: DeliveredAccount[];
 }
 
 export function OrderConfirmationStep({
 	orderInfo,
 	deliveredAccounts = [],
 }: OrderConfirmationStepProps) {
-	const hasAccounts = deliveredAccounts.length > 0
+	const hasAccounts = deliveredAccounts.length > 0;
 	const trackingHref = orderInfo.trackingToken
 		? `/orden/${orderInfo.trackingToken}`
-		: null
+		: null;
 
 	return (
 		<Card className="border-primary/20 bg-primary/5">
@@ -29,7 +29,9 @@ export function OrderConfirmationStep({
 				<div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/20">
 					<CheckCircle2 className="size-8 text-primary" />
 				</div>
-				<CardTitle className="text-2xl text-primary">¡Pago Completado!</CardTitle>
+				<CardTitle className="text-2xl text-primary">
+					¡Pago Completado!
+				</CardTitle>
 				<p className="text-muted-foreground">
 					Tu orden #{orderInfo.id} ha sido procesada exitosamente
 				</p>
@@ -76,5 +78,5 @@ export function OrderConfirmationStep({
 				</div>
 			</CardContent>
 		</Card>
-	)
+	);
 }

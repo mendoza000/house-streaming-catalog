@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { Copy } from "lucide-react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import type { DeliveredAccount } from "@/types/delivery"
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import type { DeliveredAccount } from "@/types/delivery";
 
 interface DeliveredAccountsCardProps {
-	accounts: DeliveredAccount[]
+	accounts: DeliveredAccount[];
 }
 
 const formatExpiry = (iso: string) =>
@@ -14,18 +14,20 @@ const formatExpiry = (iso: string) =>
 		day: "numeric",
 		month: "long",
 		year: "numeric",
-	})
+	});
 
 /**
  * Render compartido de las credenciales entregadas (email/contraseña por
  * pantalla, con copiar al portapapeles). Reusado por el paso de confirmación
  * del checkout y por la página de seguimiento /orden/[token].
  */
-export function DeliveredAccountsCard({ accounts }: DeliveredAccountsCardProps) {
+export function DeliveredAccountsCard({
+	accounts,
+}: DeliveredAccountsCardProps) {
 	const handleCopy = (text: string, label: string) => {
-		navigator.clipboard.writeText(text)
-		toast.success(`${label} copiado al portapapeles`)
-	}
+		navigator.clipboard.writeText(text);
+		toast.success(`${label} copiado al portapapeles`);
+	};
 
 	return (
 		<div className="space-y-4">
@@ -83,7 +85,9 @@ export function DeliveredAccountsCard({ accounts }: DeliveredAccountsCardProps) 
 										variant="ghost"
 										size="icon"
 										className="h-6 w-6"
-										onClick={() => handleCopy(account.password ?? "", "Contraseña")}
+										onClick={() =>
+											handleCopy(account.password ?? "", "Contraseña")
+										}
 									>
 										<Copy className="size-3" />
 									</Button>
@@ -101,5 +105,5 @@ export function DeliveredAccountsCard({ accounts }: DeliveredAccountsCardProps) 
 				</p>
 			</div>
 		</div>
-	)
+	);
 }

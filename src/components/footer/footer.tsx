@@ -1,15 +1,15 @@
-import Link from "next/link"
-import { getWhatsAppUrl } from "@/lib/whatsapp"
+import Link from "next/link";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 const NAV_LINKS = [
 	{ href: "/", label: "Inicio" },
 	{ href: "/quienes-somos", label: "Quiénes somos" },
-]
+];
 
-const PAYMENT_METHODS = ["PayPal", "Binance Pay", "Pago Móvil"]
+const PAYMENT_METHODS = ["PayPal", "Binance Pay", "Pago Móvil"];
 
 export function Footer() {
-	const year = new Date().getFullYear()
+	const year = new Date().getFullYear();
 
 	return (
 		<footer className="border-t mt-16 bg-background">
@@ -69,5 +69,5 @@ export function Footer() {
 				</div>
 			</div>
 		</footer>
-	)
+	);
 }

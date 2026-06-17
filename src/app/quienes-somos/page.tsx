@@ -1,13 +1,13 @@
-import type { Metadata } from "next"
-import { Zap, RefreshCw, Headphones, ShieldCheck } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { getWhatsAppUrl } from "@/lib/whatsapp"
+import { Headphones, RefreshCw, ShieldCheck, Zap } from "lucide-react";
+import type { Metadata } from "next";
+import { Button } from "@/components/ui/button";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
 	title: "Quiénes somos",
 	description:
 		"Conocé House Streaming: tu acceso a Netflix, Disney+, HBO Max, Spotify y más, con entrega automática y soporte 24/7.",
-}
+};
 
 const FEATURES = [
 	{
@@ -34,7 +34,7 @@ const FEATURES = [
 		description:
 			"Pagá con PayPal, Binance Pay o Pago Móvil de forma segura y confiable.",
 	},
-]
+];
 
 export default function QuienesSomosPage() {
 	return (
@@ -44,10 +44,11 @@ export default function QuienesSomosPage() {
 					Quiénes somos
 				</h1>
 				<p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-					En <strong className="text-foreground">House Streaming</strong> reunimos
-					todos tus servicios de streaming favoritos en un solo lugar. Accedé a
-					Netflix, HBO Max, Prime Video, Disney+, Spotify, YouTube Premium,
-					CapCut Pro y muchos más, con planes accesibles y entrega inmediata.
+					En <strong className="text-foreground">House Streaming</strong>{" "}
+					reunimos todos tus servicios de streaming favoritos en un solo lugar.
+					Accedé a Netflix, HBO Max, Prime Video, Disney+, Spotify, YouTube
+					Premium, CapCut Pro y muchos más, con planes accesibles y entrega
+					inmediata.
 				</p>
 				<p className="mt-4 text-lg text-muted-foreground leading-relaxed">
 					Nuestra misión es que disfrutes del mejor entretenimiento sin
@@ -77,15 +78,11 @@ export default function QuienesSomosPage() {
 					Escribinos por WhatsApp y te ayudamos a elegir el plan ideal.
 				</p>
 				<Button asChild size="lg" className="mt-6">
-					<a
-						href={getWhatsAppUrl()}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
+					<a href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
 						Contactanos
 					</a>
 				</Button>
 			</div>
 		</div>
-	)
+	);
 }

@@ -1,24 +1,24 @@
-import { useQuery } from "@tanstack/react-query"
-import type { OrderTrackingResponse } from "@/types/order-types"
+import { useQuery } from "@tanstack/react-query";
+import type { OrderTrackingResponse } from "@/types/order-types";
 
 export const orderTrackingKeys = {
 	byToken: (token: string) => ["order-tracking", token] as const,
-}
+};
 
 /** Estados terminales: una vez acá, no tiene sentido seguir pooleando. */
-const TERMINAL = new Set(["completed", "failed", "cancelled"])
+const TERMINAL = new Set(["completed", "failed", "cancelled"]);
 
 async function fetchOrderTracking(
 	token: string,
 ): Promise<OrderTrackingResponse> {
-	const res = await fetch(`/api/orders/track/${token}`)
+	const res = await fetch(`/api/orders/track/${token}`);
 	if (res.status === 404) {
-		throw new Error("not_found")
+		throw new Error("not_found");
 	}
 	if (!res.ok) {
-		throw new Error("fetch_error")
+		throw new Error("fetch_error");
 	}
-	return res.json()
+	return res.json();
 }
 
 /**
@@ -34,9 +34,9 @@ export function useOrderTracking(token: string) {
 		retry: (failureCount, error) =>
 			error.message !== "not_found" && failureCount < 3,
 		refetchInterval: (query) => {
-			const status = query.state.data?.status
-			if (status && TERMINAL.has(status)) return false
-			return 5000
+			const status = query.state.data?.status;
+			if (status && TERMINAL.has(status)) return false;
+			return 5000;
 		},
-	})
+	});
 }

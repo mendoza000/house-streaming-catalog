@@ -1,17 +1,14 @@
-"use client"
+"use client";
 
-import { use } from "react"
-import { CheckCircle2, Clock, Loader2, XCircle } from "lucide-react"
-import Link from "next/link"
-import { DeliveredAccountsCard } from "@/components/orden/delivered-accounts-card"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useOrderTracking } from "@/hooks/orders/use-order-tracking"
+import { CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+import Link from "next/link";
+import { use } from "react";
+import { DeliveredAccountsCard } from "@/components/orden/delivered-accounts-card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOrderTracking } from "@/hooks/orders/use-order-tracking";
 
-const STATUS_INFO: Record<
-	string,
-	{ label: string; description: string }
-> = {
+const STATUS_INFO: Record<string, { label: string; description: string }> = {
 	pending: {
 		label: "Pago pendiente",
 		description: "Estamos esperando la confirmación de tu pago.",
@@ -38,15 +35,15 @@ const STATUS_INFO: Record<
 		label: "Sin finalizar",
 		description: "Esta orden todavía no fue confirmada.",
 	},
-}
+};
 
 export default function OrderTrackingPage({
 	params,
 }: {
-	params: Promise<{ token: string }>
+	params: Promise<{ token: string }>;
 }) {
-	const { token } = use(params)
-	const { data, isLoading, isError, error } = useOrderTracking(token)
+	const { token } = use(params);
+	const { data, isLoading, isError, error } = useOrderTracking(token);
 
 	const wrap = (children: React.ReactNode) => (
 		<div className="min-h-screen bg-gradient-to-b from-background to-muted/20 pt-20">
@@ -54,7 +51,7 @@ export default function OrderTrackingPage({
 				{children}
 			</div>
 		</div>
-	)
+	);
 
 	if (isLoading) {
 		return wrap(
@@ -62,11 +59,11 @@ export default function OrderTrackingPage({
 				<Loader2 className="size-8 animate-spin" />
 				<p className="text-sm">Cargando tu orden…</p>
 			</div>,
-		)
+		);
 	}
 
 	if (isError) {
-		const notFound = error instanceof Error && error.message === "not_found"
+		const notFound = error instanceof Error && error.message === "not_found";
 		return wrap(
 			<Card>
 				<CardHeader className="text-center">
@@ -88,25 +85,27 @@ export default function OrderTrackingPage({
 					</Link>
 				</CardContent>
 			</Card>,
-		)
+		);
 	}
 
-	if (!data) return wrap(null)
+	if (!data) return wrap(null);
 
-	const info = STATUS_INFO[data.status ?? "pending"] ?? STATUS_INFO.pending
-	const isCompleted = data.status === "completed"
-	const isFailed = data.status === "failed" || data.status === "cancelled"
-	const hasAccounts = (data.delivered?.length ?? 0) > 0
+	const info = STATUS_INFO[data.status ?? "pending"] ?? STATUS_INFO.pending;
+	const isCompleted = data.status === "completed";
+	const isFailed = data.status === "failed" || data.status === "cancelled";
+	const hasAccounts = (data.delivered?.length ?? 0) > 0;
 
-	const StatusIcon = isCompleted ? CheckCircle2 : isFailed ? XCircle : Clock
+	const StatusIcon = isCompleted ? CheckCircle2 : isFailed ? XCircle : Clock;
 	const iconWrapClass = isCompleted
 		? "bg-primary/20 text-primary"
 		: isFailed
 			? "bg-destructive/10 text-destructive"
-			: "bg-amber-500/10 text-amber-500"
+			: "bg-amber-500/10 text-amber-500";
 
 	return wrap(
-		<Card className={isCompleted ? "border-primary/20 bg-primary/5" : undefined}>
+		<Card
+			className={isCompleted ? "border-primary/20 bg-primary/5" : undefined}
+		>
 			<CardHeader className="text-center pb-2">
 				<div
 					className={`mx-auto mb-4 flex size-16 items-center justify-center rounded-full ${iconWrapClass}`}
@@ -146,5 +145,5 @@ export default function OrderTrackingPage({
 				</div>
 			</CardContent>
 		</Card>,
-	)
+	);
 }

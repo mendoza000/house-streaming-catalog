@@ -1,39 +1,39 @@
-"use client"
+"use client";
 
-import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
-	const { theme, setTheme } = useTheme()
-	const [mounted, setMounted] = useState(false)
+	const { theme, setTheme } = useTheme();
+	const [mounted, setMounted] = useState(false);
 
 	// Evitar hydration mismatch
 	useEffect(() => {
-		setMounted(true)
-	}, [])
+		setMounted(true);
+	}, []);
 
 	if (!mounted) {
 		return (
 			<Button variant="ghost" size="icon" disabled aria-hidden="true">
 				<Sun className="size-5" />
 			</Button>
-		)
+		);
 	}
 
 	const toggleTheme = () => {
 		// Usar View Transition API si está disponible
 		if (document.startViewTransition) {
 			document.startViewTransition(() => {
-				setTheme(theme === "dark" ? "light" : "dark")
-			})
+				setTheme(theme === "dark" ? "light" : "dark");
+			});
 		} else {
-			setTheme(theme === "dark" ? "light" : "dark")
+			setTheme(theme === "dark" ? "light" : "dark");
 		}
-	}
+	};
 
-	const isDark = theme === "dark"
+	const isDark = theme === "dark";
 
 	return (
 		<Button
@@ -49,5 +49,5 @@ export function ThemeToggle() {
 				{isDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
 			</span>
 		</Button>
-	)
+	);
 }

@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
-import { getExchangeRate } from "@/api/exchange-rate"
+import { useQuery } from "@tanstack/react-query";
+import { getExchangeRate } from "@/api/exchange-rate";
 
 /**
  * Custom hook to fetch and cache the USDT/VES exchange rate
@@ -14,5 +14,5 @@ export function useExchangeRate() {
 		refetchOnWindowFocus: false,
 		refetchOnMount: false,
 		retry: 2,
-	})
+	});
 }

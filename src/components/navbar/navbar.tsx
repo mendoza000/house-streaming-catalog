@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Menu } from "lucide-react"
-import { useState } from "react"
-import { ThemeToggle } from "./theme-toggle"
-import { Cart } from "./cart"
+import { Menu } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
 	Sheet,
 	SheetContent,
 	SheetHeader,
 	SheetTitle,
 	SheetTrigger,
-} from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { getWhatsAppUrl } from "@/lib/whatsapp"
+} from "@/components/ui/sheet";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
+import { Cart } from "./cart";
+import { ThemeToggle } from "./theme-toggle";
 
 const LINKS = [
 	{ href: "/", label: "Inicio" },
 	{ href: "/quienes-somos", label: "Quiénes somos" },
-]
+];
 
 export default function Navbar() {
-	const [open, setOpen] = useState(false)
+	const [open, setOpen] = useState(false);
 
 	return (
 		<nav className="fixed top-0 left-0 right-0 z-50 bg-background px-5 py-2 border-b-2">
@@ -104,5 +104,5 @@ export default function Navbar() {
 				</div>
 			</div>
 		</nav>
-	)
+	);
 }

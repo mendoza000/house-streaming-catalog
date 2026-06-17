@@ -1,6 +1,6 @@
-import { Button } from "../ui/button"
-import Image from "next/image"
-import { getWhatsAppUrl } from "@/lib/whatsapp"
+import Image from "next/image";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
+import { Button } from "../ui/button";
 
 export default function Header() {
 	return (
@@ -52,5 +52,5 @@ export default function Header() {
 				</div>
 			</div>
 		</header>
-	)
+	);
 }

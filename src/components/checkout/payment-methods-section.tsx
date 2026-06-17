@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PaymentMethodCard } from "./payment-method-card"
-import { AvailabilityCheckStep } from "./payment-steps/availability-check-step"
-import { BinancePaymentStep } from "./payment-steps/binance-payment-step"
-import { PayPalPaymentStep } from "./payment-steps/paypal-payment-step"
-import { CreditCardPaymentStep } from "./payment-steps/credit-card-payment-step"
-import { PagoMovilPaymentStep } from "./payment-steps/pago-movil-payment-step"
-import { OrderConfirmationStep } from "./payment-steps/order-confirmation-step"
-import { PaymentValidationStep } from "./payment-steps/payment-validation-step"
-import { PAYMENT_METHODS } from "@/constants/payment-methods"
-import { useCartStore } from "@/stores/cart-store"
-import { useCurrencyStore } from "@/stores/currency-store"
-import { useCreateOrder } from "@/hooks/orders/use-create-order"
-import { useServices } from "@/hooks/services/use-services"
-import type { AvailabilityItem } from "@/hooks/orders/use-availability-check"
-import type { OrderStatus, ClientFormData } from "@/types/order-types"
-import type { DeliveredAccount } from "@/types/delivery"
-import { Loader2, AlertCircle } from "lucide-react"
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PAYMENT_METHODS } from "@/constants/payment-methods";
+import type { AvailabilityItem } from "@/hooks/orders/use-availability-check";
+import { useCreateOrder } from "@/hooks/orders/use-create-order";
+import { useServices } from "@/hooks/services/use-services";
+import { useCartStore } from "@/stores/cart-store";
+import { useCurrencyStore } from "@/stores/currency-store";
+import type { DeliveredAccount } from "@/types/delivery";
+import type { ClientFormData, OrderStatus } from "@/types/order-types";
+import { PaymentMethodCard } from "./payment-method-card";
+import { AvailabilityCheckStep } from "./payment-steps/availability-check-step";
+import { BinancePaymentStep } from "./payment-steps/binance-payment-step";
+import { CreditCardPaymentStep } from "./payment-steps/credit-card-payment-step";
+import { OrderConfirmationStep } from "./payment-steps/order-confirmation-step";
+import { PagoMovilPaymentStep } from "./payment-steps/pago-movil-payment-step";
+import { PaymentValidationStep } from "./payment-steps/payment-validation-step";
+import { PayPalPaymentStep } from "./payment-steps/paypal-payment-step";
 
 interface PaymentMethodsSectionProps {
-	onStepChange?: (step: number) => void
-	clientData: ClientFormData
-	isClientFormValid: boolean
+	onStepChange?: (step: number) => void;
+	clientData: ClientFormData;
+	isClientFormValid: boolean;
 }
 
 export function PaymentMethodsSection({
@@ -32,47 +32,51 @@ export function PaymentMethodsSection({
 	clientData,
 	isClientFormValid,
 }: PaymentMethodsSectionProps) {
-	const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
-	const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
-	const [orderStatus, setOrderStatus] = useState<OrderStatus>("pending")
-	const [orderId, setOrderId] = useState<number | null>(null)
-	const [trackingToken, setTrackingToken] = useState<string | null>(null)
-	const [deliveredAccounts, setDeliveredAccounts] = useState<DeliveredAccount[]>(
-		[],
-	)
+	const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+	const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
+	const [orderStatus, setOrderStatus] = useState<OrderStatus>("pending");
+	const [orderId, setOrderId] = useState<number | null>(null);
+	const [trackingToken, setTrackingToken] = useState<string | null>(null);
+	const [deliveredAccounts, setDeliveredAccounts] = useState<
+		DeliveredAccount[]
+	>([]);
 	// Cuando el carrito tiene servicios bajo pedido, se consulta disponibilidad
 	// antes de habilitar el pago.
-	const [awaitingAvailability, setAwaitingAvailability] = useState(false)
+	const [awaitingAvailability, setAwaitingAvailability] = useState(false);
 	// URL del comprobante subido (Pago Móvil), para la validación por Telegram.
-	const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
-	
-	const cartItems = useCartStore((state) => state.items)
-	const getTotalPrice = useCartStore((state) => state.getTotalPrice)
-	const clearCart = useCartStore((state) => state.clearCart)
-	const currency = useCurrencyStore((state) => state.currency)
-	
-	const { mutate: createOrderMutation, isLoading: isCreatingOrder, error: createOrderError } = useCreateOrder()
-	const { data: services } = useServices()
+	const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+
+	const cartItems = useCartStore((state) => state.items);
+	const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+	const clearCart = useCartStore((state) => state.clearCart);
+	const currency = useCurrencyStore((state) => state.currency);
+
+	const {
+		mutate: createOrderMutation,
+		isLoading: isCreatingOrder,
+		error: createOrderError,
+	} = useCreateOrder();
+	const { data: services } = useServices();
 
 	// Ítems del carrito que son "bajo pedido" (requieren consultar disponibilidad).
 	const byRequestServiceIds = new Set(
 		(services ?? []).filter((s) => s.is_by_request).map((s) => s.id),
-	)
+	);
 	const byRequestItems: AvailabilityItem[] = cartItems
 		.filter((item) => byRequestServiceIds.has(Number(item.id)))
 		.map((item) => ({
 			serviceId: Number(item.id),
 			title: item.title,
 			months: item.months,
-		}))
+		}));
 
 	// Calculate total for PayPal using the store's method (includes accounts * months)
-	const totalAmount = getTotalPrice()
+	const totalAmount = getTotalPrice();
 
-	const selectedMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethodId)
+	const selectedMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethodId);
 
 	const handleContinueToStep2 = async () => {
-		if (!selectedMethodId || !isClientFormValid) return
+		if (!selectedMethodId || !isClientFormValid) return;
 
 		// Crear la orden en la base de datos
 		const order = await createOrderMutation({
@@ -83,89 +87,89 @@ export function PaymentMethodsSection({
 			payment_method: selectedMethod?.name || selectedMethodId,
 			currency: currency,
 			items: cartItems,
-		})
+		});
 
 		if (order) {
-			setOrderId(order.id)
-			setTrackingToken(order.tracking_token)
-			onStepChange?.(2)
+			setOrderId(order.id);
+			setTrackingToken(order.tracking_token);
+			onStepChange?.(2);
 			// Si hay servicios bajo pedido, consultar disponibilidad antes de pagar.
 			if (byRequestItems.length > 0) {
-				setAwaitingAvailability(true)
+				setAwaitingAvailability(true);
 			} else {
-				setCurrentStep(2)
+				setCurrentStep(2);
 			}
 		}
-	}
+	};
 
 	const handleAvailabilityConfirmed = () => {
-		setAwaitingAvailability(false)
-		setCurrentStep(2)
-	}
+		setAwaitingAvailability(false);
+		setCurrentStep(2);
+	};
 
 	const handleAvailabilityBack = () => {
-		setAwaitingAvailability(false)
-		handleBackToStep1()
-	}
+		setAwaitingAvailability(false);
+		handleBackToStep1();
+	};
 
 	const handleBackToStep1 = () => {
 		// No hacer nada con la orden, se mantiene en draft
 		// El usuario puede volver a continuar y se reutilizará la misma orden
-		setCurrentStep(1)
-		onStepChange?.(1)
-	}
+		setCurrentStep(1);
+		onStepChange?.(1);
+	};
 
 	// PayPal / tarjeta: el server capturó el pago, marcó la orden `completed` Y la
 	// entregó (service-role, bypasea RLS). Acá solo reflejamos estado + lo
 	// entregado, sin escribir a DB desde el cliente (la RLS lo bloquearía).
 	const handleAutomaticDelivered = (delivered: DeliveredAccount[]) => {
-		setDeliveredAccounts(delivered)
-		setOrderStatus("completed")
-		setCurrentStep(3)
-		onStepChange?.(3)
-		clearCart()
-	}
+		setDeliveredAccounts(delivered);
+		setOrderStatus("completed");
+		setCurrentStep(3);
+		onStepChange?.(3);
+		clearCart();
+	};
 
 	// Binance: el server ya marcó la orden `completed` Y la entregó (devuelve las
 	// credenciales). Acá solo reflejamos estado + lo entregado, sin re-escribir DB.
 	const handleBinanceVerified = (delivered: DeliveredAccount[]) => {
-		setDeliveredAccounts(delivered)
-		setOrderStatus("completed")
-		setCurrentStep(3)
-		onStepChange?.(3)
-		clearCart()
-	}
+		setDeliveredAccounts(delivered);
+		setOrderStatus("completed");
+		setCurrentStep(3);
+		onStepChange?.(3);
+		clearCart();
+	};
 
 	// Pago Móvil: subió el comprobante → crear ticket de validación y pasar al
 	// paso "Validando…". El admin aprueba/rechaza por Telegram.
 	const handlePagoMovilSubmit = (uploadedReceiptUrl: string) => {
 		// La orden se marca 'validating' server-side al crear el ticket (dentro
 		// de createPaymentValidationRequest), así que acá solo cambiamos de paso.
-		setReceiptUrl(uploadedReceiptUrl)
-		setOrderStatus("validating")
-		setCurrentStep(3)
-		onStepChange?.(3)
-	}
+		setReceiptUrl(uploadedReceiptUrl);
+		setOrderStatus("validating");
+		setCurrentStep(3);
+		onStepChange?.(3);
+	};
 
 	// El admin aprobó el pago: el trigger ya completó/entregó la orden server-side.
 	// Acá reflejamos las credenciales y pasamos a la confirmación.
 	const handlePaymentValidationApproved = (delivered: DeliveredAccount[]) => {
-		setDeliveredAccounts(delivered)
-		setOrderStatus("completed")
-		clearCart()
-	}
+		setDeliveredAccounts(delivered);
+		setOrderStatus("completed");
+		clearCart();
+	};
 
 	const handlePaymentError = (error: unknown) => {
-		console.error("Payment error:", error)
+		console.error("Payment error:", error);
 		// TODO: Show error message to user
-	}
+	};
 
 	// Step 3: Confirmation / Validation
 	if (currentStep === 3) {
 		if (orderStatus === "validating" && orderId && receiptUrl) {
 			const summary = `${cartItems
 				.map((i) => `${i.title} x${i.quantity}`)
-				.join(", ")} — Total ${totalAmount.toFixed(2)} ${currency}`
+				.join(", ")} — Total ${totalAmount.toFixed(2)} ${currency}`;
 			return (
 				<PaymentValidationStep
 					input={{
@@ -177,7 +181,7 @@ export function PaymentMethodsSection({
 					}}
 					onApproved={handlePaymentValidationApproved}
 				/>
-			)
+			);
 		}
 
 		if (orderStatus === "completed") {
@@ -193,7 +197,7 @@ export function PaymentMethodsSection({
 					}}
 					deliveredAccounts={deliveredAccounts}
 				/>
-			)
+			);
 		}
 	}
 
@@ -206,7 +210,7 @@ export function PaymentMethodsSection({
 				onAllAvailable={handleAvailabilityConfirmed}
 				onBack={handleAvailabilityBack}
 			/>
-		)
+		);
 	}
 
 	// Step 2: Show payment-specific component
@@ -220,7 +224,7 @@ export function PaymentMethodsSection({
 						onVerify={handleBinanceVerified}
 						onBack={handleBackToStep1}
 					/>
-				)
+				);
 			case "paypal":
 				return (
 					<PayPalPaymentStep
@@ -230,7 +234,7 @@ export function PaymentMethodsSection({
 						onError={handlePaymentError}
 						onBack={handleBackToStep1}
 					/>
-				)
+				);
 			case "credit-card":
 				return (
 					<CreditCardPaymentStep
@@ -240,7 +244,7 @@ export function PaymentMethodsSection({
 						onError={handlePaymentError}
 						onBack={handleBackToStep1}
 					/>
-				)
+				);
 			case "pago-movil":
 				return (
 					<PagoMovilPaymentStep
@@ -248,9 +252,9 @@ export function PaymentMethodsSection({
 						onSubmit={handlePagoMovilSubmit}
 						onBack={handleBackToStep1}
 					/>
-				)
+				);
 			default:
-				return null
+				return null;
 		}
 	}
 
@@ -288,9 +292,9 @@ export function PaymentMethodsSection({
 					size="lg"
 					className="w-full"
 					disabled={
-						!selectedMethodId || 
-						cartItems.length === 0 || 
-						!isClientFormValid || 
+						!selectedMethodId ||
+						cartItems.length === 0 ||
+						!isClientFormValid ||
 						isCreatingOrder
 					}
 					onClick={handleContinueToStep2}
@@ -310,7 +314,7 @@ export function PaymentMethodsSection({
 						Selecciona un método de pago para continuar
 					</p>
 				)}
-				
+
 				{!isClientFormValid && cartItems.length > 0 && (
 					<p className="text-center text-sm text-muted-foreground">
 						Completa tus datos para continuar
@@ -318,5 +322,5 @@ export function PaymentMethodsSection({
 				)}
 			</CardContent>
 		</Card>
-	)
+	);
 }

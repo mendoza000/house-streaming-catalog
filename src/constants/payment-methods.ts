@@ -1,21 +1,21 @@
 export interface PaymentMethod {
-	id: string
-	name: string
-	description: string
-	icon: string
-	type: "automatic" | "manual"
-	instructions?: string[]
+	id: string;
+	name: string;
+	description: string;
+	icon: string;
+	type: "automatic" | "manual";
+	instructions?: string[];
 	accountInfo?: {
-		bank?: string
-		phone?: string
-		holder?: string
-		id?: string
-	}
+		bank?: string;
+		phone?: string;
+		holder?: string;
+		id?: string;
+	};
 	binanceInfo?: {
-		qrCodeUrl: string
-		binanceId: string
-	}
-	verificationTimeSeconds?: number
+		qrCodeUrl: string;
+		binanceId: string;
+	};
+	verificationTimeSeconds?: number;
 }
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
@@ -56,4 +56,4 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
 			id: "30261759",
 		},
 	},
-]
+];

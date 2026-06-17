@@ -11,32 +11,32 @@
  * Solo se tipan los campos que usamos para validar.
  */
 export interface BinancePayTransaction {
-	orderType: string
-	transactionId: string
-	transactionTime: number
+	orderType: string;
+	transactionId: string;
+	transactionTime: number;
 	/** Monto como string. Positivo = entrante (recibido), negativo = saliente. */
-	amount: string
-	currency: string
+	amount: string;
+	currency: string;
 	/** Nota de texto libre que escribe quien envía el pago. Puede no venir. */
-	note?: string
+	note?: string;
 }
 
 export interface MatchParams {
 	/** Código único que debe aparecer en la nota, ej: "ord-123". */
-	orderCode: string
+	orderCode: string;
 	/** Total esperado de la orden, ya convertido a USD. */
-	expectedAmountUsd: number
+	expectedAmountUsd: number;
 	/** Tolerancia de menos permitida en USD (comisiones/redondeos). Default 0.5. */
-	toleranceUsd?: number
+	toleranceUsd?: number;
 	/** Moneda en la que se espera el pago. Default "USDT". */
-	expectedCurrency?: string
+	expectedCurrency?: string;
 }
 
-const DEFAULT_TOLERANCE_USD = 0.5
-const DEFAULT_CURRENCY = "USDT"
+const DEFAULT_TOLERANCE_USD = 0.5;
+const DEFAULT_CURRENCY = "USDT";
 
 function escapeRegExp(value: string): string {
-	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
@@ -48,8 +48,8 @@ function noteContainsOrderCode(note: string, orderCode: string): boolean {
 	const pattern = new RegExp(
 		`(^|[^a-z0-9])${escapeRegExp(orderCode.toLowerCase())}([^a-z0-9]|$)`,
 		"i",
-	)
-	return pattern.test(note)
+	);
+	return pattern.test(note);
 }
 
 /**
@@ -67,20 +67,20 @@ export function findMatchingTransactions(
 	transactions: BinancePayTransaction[],
 	params: MatchParams,
 ): BinancePayTransaction[] {
-	const tolerance = params.toleranceUsd ?? DEFAULT_TOLERANCE_USD
-	const currency = (params.expectedCurrency ?? DEFAULT_CURRENCY).toUpperCase()
-	const minAmount = params.expectedAmountUsd - tolerance
+	const tolerance = params.toleranceUsd ?? DEFAULT_TOLERANCE_USD;
+	const currency = (params.expectedCurrency ?? DEFAULT_CURRENCY).toUpperCase();
+	const minAmount = params.expectedAmountUsd - tolerance;
 
 	return transactions
 		.filter((tx) => {
-			if (!noteContainsOrderCode(tx.note ?? "", params.orderCode)) return false
+			if (!noteContainsOrderCode(tx.note ?? "", params.orderCode)) return false;
 
-			if (tx.currency?.toUpperCase() !== currency) return false
+			if (tx.currency?.toUpperCase() !== currency) return false;
 
-			const amount = Number.parseFloat(tx.amount)
-			if (!Number.isFinite(amount) || amount <= 0) return false
+			const amount = Number.parseFloat(tx.amount);
+			if (!Number.isFinite(amount) || amount <= 0) return false;
 
-			return amount >= minAmount
+			return amount >= minAmount;
 		})
-		.sort((a, b) => a.transactionTime - b.transactionTime)
+		.sort((a, b) => a.transactionTime - b.transactionTime);
 }

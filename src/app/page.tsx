@@ -1,5 +1,5 @@
-import Header from "@/components/home/header"
-import Products from "@/components/home/products/products"
+import Header from "@/components/home/header";
+import Products from "@/components/home/products/products";
 
 export default function Home() {
 	return (
@@ -9,5 +9,5 @@ export default function Home() {
 				<Products />
 			</section>
 		</div>
-	)
+	);
 }

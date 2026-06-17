@@ -1,11 +1,11 @@
-import { useMutation } from "@tanstack/react-query"
-import { uploadReceipt } from "@/api/receipts"
-import type { ReceiptUploadResult } from "@/types/receipt"
+import { useMutation } from "@tanstack/react-query";
+import { uploadReceipt } from "@/api/receipts";
+import type { ReceiptUploadResult } from "@/types/receipt";
 
 export const receiptKeys = {
 	all: ["receipts"] as const,
 	upload: ["receipts", "upload"] as const,
-}
+};
 
 /**
  * Hook for uploading receipt images to Supabase Storage
@@ -15,5 +15,5 @@ export function useReceiptUpload() {
 	return useMutation<ReceiptUploadResult, Error, File>({
 		mutationFn: uploadReceipt,
 		mutationKey: receiptKeys.upload,
-	})
+	});
 }

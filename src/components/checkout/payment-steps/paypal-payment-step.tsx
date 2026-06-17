@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { DeliveredAccount } from "@/types/delivery"
+import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { DeliveredAccount } from "@/types/delivery";
 
 interface PayPalPaymentStepProps {
-	orderId: number
-	amount: number
-	currency?: string
-	onSuccess: (delivered: DeliveredAccount[]) => void
-	onError: (error: unknown) => void
-	onBack: () => void
+	orderId: number;
+	amount: number;
+	currency?: string;
+	onSuccess: (delivered: DeliveredAccount[]) => void;
+	onError: (error: unknown) => void;
+	onBack: () => void;
 }
 
 export function PayPalPaymentStep({
@@ -22,7 +22,7 @@ export function PayPalPaymentStep({
 	onError,
 	onBack,
 }: PayPalPaymentStepProps) {
-	const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? ""
+	const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
 
 	if (!clientId) {
 		return (
@@ -33,7 +33,7 @@ export function PayPalPaymentStep({
 					</p>
 				</CardContent>
 			</Card>
-		)
+		);
 	}
 
 	return (
@@ -74,14 +74,14 @@ export function PayPalPaymentStep({
 										method: "POST",
 										headers: { "Content-Type": "application/json" },
 										body: JSON.stringify({ orderId }),
-									})
+									});
 
 									if (!response.ok) {
-										throw new Error("Failed to create order")
+										throw new Error("Failed to create order");
 									}
 
-									const order = await response.json()
-									return order.id
+									const order = await response.json();
+									return order.id;
 								}}
 								onApprove={async (data) => {
 									// La captura + completar orden + entrega ocurren server-side
@@ -94,20 +94,20 @@ export function PayPalPaymentStep({
 											paypalOrderId: data.orderID,
 											orderId,
 										}),
-									})
+									});
 
 									if (!response.ok) {
-										const error = await response.json().catch(() => ({}))
-										onError(error)
-										return
+										const error = await response.json().catch(() => ({}));
+										onError(error);
+										return;
 									}
 
-									const result = await response.json()
-									onSuccess(result.delivered ?? [])
+									const result = await response.json();
+									onSuccess(result.delivered ?? []);
 								}}
 								onError={(err) => {
-									console.error("PayPal error:", err)
-									onError(err)
+									console.error("PayPal error:", err);
+									onError(err);
 								}}
 							/>
 						</div>
@@ -128,5 +128,5 @@ export function PayPalPaymentStep({
 				</CardContent>
 			</Card>
 		</PayPalScriptProvider>
-	)
+	);
 }
