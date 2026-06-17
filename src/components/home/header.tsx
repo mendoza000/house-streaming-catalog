@@ -1,5 +1,6 @@
 import { Button } from "../ui/button"
 import Image from "next/image"
+import { getWhatsAppUrl } from "@/lib/whatsapp"
 
 export default function Header() {
 	return (
@@ -36,9 +37,17 @@ export default function Header() {
 				</p>
 
 				<div className="mt-8 flex justify-center gap-4">
-					<Button size="lg">Comenzar</Button>
-					<Button variant="outline-light" size="lg">
-						Contactanos
+					<Button asChild size="lg">
+						<a href="#catalogo">Comenzar</a>
+					</Button>
+					<Button asChild variant="outline-light" size="lg">
+						<a
+							href={getWhatsAppUrl()}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							Contactanos
+						</a>
 					</Button>
 				</div>
 			</div>

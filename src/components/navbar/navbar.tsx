@@ -13,11 +13,11 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { getWhatsAppUrl } from "@/lib/whatsapp"
 
 const LINKS = [
 	{ href: "/", label: "Inicio" },
-	{ href: "/nosotros", label: "Quiénes somos" },
-	{ href: "/contacto", label: "Contacto" },
+	{ href: "/quienes-somos", label: "Quiénes somos" },
 ]
 
 export default function Navbar() {
@@ -41,6 +41,14 @@ export default function Navbar() {
 								{link.label}
 							</Link>
 						))}
+						<a
+							href={getWhatsAppUrl()}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="hover:underline"
+						>
+							Contacto
+						</a>
 					</div>
 				</div>
 
@@ -74,6 +82,15 @@ export default function Navbar() {
 											{link.label}
 										</Link>
 									))}
+									<a
+										href={getWhatsAppUrl()}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="px-4 py-3 hover:bg-accent rounded-md transition-colors"
+										onClick={() => setOpen(false)}
+									>
+										Contacto
+									</a>
 								</div>
 								<div className="mt-auto p-6 border-t">
 									<div className="flex items-center justify-between">

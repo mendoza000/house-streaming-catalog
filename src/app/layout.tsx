@@ -4,6 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { QueryProvider } from "@/providers/query-provider"
 import Navbar from "@/components/navbar/navbar"
+import { Footer } from "@/components/footer/footer"
 import { Toaster } from "@/components/ui/sonner"
 
 const geistSans = Geist({
@@ -76,6 +77,7 @@ export default function RootLayout({
 					<QueryProvider>
 						<Navbar />
 						{children}
+						<Footer />
 						<Toaster />
 					</QueryProvider>
 				</ThemeProvider>
