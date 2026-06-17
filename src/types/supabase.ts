@@ -655,3 +655,10 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+export type Service = Database["public"]["Tables"]["services"]["Row"]
+export type Ticket = Database["public"]["Tables"]["tickets"]["Row"]
+export type TicketInsert = Database["public"]["Tables"]["tickets"]["Insert"]
+export type Order = Database["public"]["Tables"]["orders"]["Row"]
+export type OrderInsert = Database["public"]["Tables"]["orders"]["Insert"]
+export type OrderUpdate = Database["public"]["Tables"]["orders"]["Update"]
