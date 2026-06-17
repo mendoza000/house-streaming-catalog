@@ -4,4 +4,6 @@ export interface DeliveredAccount {
 	mail: string | null
 	password: string | null
 	screen: number
+	/** Fecha de vencimiento de la pantalla (ISO). null si la venta no fijó meses. */
+	expires_at: string | null
 }
