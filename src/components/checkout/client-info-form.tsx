@@ -7,7 +7,11 @@ import * as yup from "yup"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { User, Mail, Phone } from "lucide-react"
+import { User, Mail } from "lucide-react"
+import PhoneInputWithCountry from "react-phone-number-input/react-hook-form"
+import { isValidPhoneNumber } from "react-phone-number-input"
+import "react-phone-number-input/style.css"
+import { CountrySelect } from "@/components/checkout/country-select"
 import type { ClientFormData } from "@/types/order-types"
 
 interface ClientInfoFormProps {
@@ -30,24 +34,15 @@ const clientFormSchema = yup.object({
 	phone: yup
 		.string()
 		.required("El número de teléfono es obligatorio")
-		.matches(
-			/^[\d\s+()-]+$/,
-			"El teléfono solo puede contener números, +, espacios, guiones y paréntesis",
-		)
-		.test(
-			"min-digits",
-			"El teléfono debe tener al menos 7 dígitos",
-			(value) => {
-				if (!value) return false
-				const digits = value.replace(/\D/g, "")
-				return digits.length >= 7
-			},
+		.test("valid-phone", "Ingresa un número de teléfono válido", (value) =>
+			value ? isValidPhoneNumber(value) : false,
 		),
 })
 
 export function ClientInfoForm({ onValidChange }: ClientInfoFormProps) {
 	const {
 		register,
+		control,
 		formState: { errors, isValid },
 		watch,
 	} = useForm<ClientFormData>({
@@ -126,18 +121,20 @@ export function ClientInfoForm({ onValidChange }: ClientInfoFormProps) {
 					<Label htmlFor="client-phone">
 						Número de teléfono <span className="text-destructive">*</span>
 					</Label>
-					<div className="relative">
-						<Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-						<Input
-							id="client-phone"
-							type="tel"
-							placeholder="+58 414 1234567"
-							{...register("phone")}
-							aria-invalid={!!errors.phone}
-							className="pl-10"
-							autoComplete="tel"
-						/>
-					</div>
+					<PhoneInputWithCountry
+						name="phone"
+						control={control}
+						defaultCountry="VE"
+						international
+						countryCallingCodeEditable={false}
+						addInternationalOption={false}
+						countrySelectComponent={CountrySelect}
+						id="client-phone"
+						inputComponent={Input}
+						autoComplete="tel"
+						numberInputProps={{ "aria-invalid": !!errors.phone }}
+						className="phone-input-field"
+					/>
 					{errors.phone && (
 						<p className="text-sm text-destructive">{errors.phone.message}</p>
 					)}
