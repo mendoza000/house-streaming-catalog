@@ -144,3 +144,17 @@
     background: transparent !important;
   }
 }
+
+/* Phone input (react-phone-number-input) — el selector de país es un combobox
+   shadcn propio (CountrySelect), así que acá solo manejamos el layout.
+   Unlayered para ganar sobre el style.css base de la librería. */
+.phone-input-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.phone-input-field .PhoneInputInput {
+  flex: 1 1 auto;
+  min-width: 0;
+}
