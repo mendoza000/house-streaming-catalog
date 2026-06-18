@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { Product } from "@/constants/products";
+import { useCurrencyStore } from "@/stores/currency-store";
+import { formatPrice } from "@/utils/currency";
 
 interface AddToCartModalProps {
 	product: Product;
@@ -32,6 +34,7 @@ export function AddToCartModal({
 }: AddToCartModalProps) {
 	const [accountsInput, setAccountsInput] = useState("1");
 	const [months, setMonths] = useState<number>(1);
+	const currency = useCurrencyStore((state) => state.currency);
 
 	const accounts = Number.parseInt(accountsInput, 10) || 0;
 	const maxAccounts = product.available; // undefined = sin límite conocido
@@ -79,7 +82,7 @@ export function AddToCartModal({
 							{product.description}
 						</p>
 						<p className="mt-1 text-lg font-bold text-primary">
-							${product.price.toFixed(2)}
+							{formatPrice(product.price, currency)}
 							<span className="text-xs font-normal text-muted-foreground">
 								/mes
 							</span>
@@ -167,7 +170,8 @@ export function AddToCartModal({
 							<div className="flex justify-between text-sm">
 								<span className="text-muted-foreground">Precio base</span>
 								<span className="font-medium">
-									${product.price.toFixed(2)}/mes
+									{formatPrice(product.price, currency)}
+									/mes
 								</span>
 							</div>
 							<div className="flex justify-between text-sm">
@@ -185,7 +189,7 @@ export function AddToCartModal({
 									<span className="font-semibold">Total</span>
 									<div className="text-right">
 										<div className="text-3xl font-bold text-primary">
-											${subtotal.toFixed(2)}
+											{formatPrice(subtotal, currency)}
 										</div>
 									</div>
 								</div>

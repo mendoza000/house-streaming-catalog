@@ -8,6 +8,7 @@ import { useServiceStock } from "@/hooks/services/use-service-stock";
 import { useServices } from "@/hooks/services/use-services";
 import { useCartStore } from "@/stores/cart-store";
 import { useCurrencyStore } from "@/stores/currency-store";
+import { convertPrice } from "@/utils/currency";
 import { CategoryFilter } from "./category-filter";
 import { CurrencySelector } from "./currency-selector";
 import { ProductCard } from "./product-card";
@@ -31,11 +32,9 @@ export default function Products() {
 			.map((service): Product => {
 				// Store base price in USD for cart
 				const basePrice = service.screen_price ?? 0;
-				// Convert price for display if VES is selected and exchange rate is available
-				const displayPrice =
-					currency === "VES" && exchangeRate
-						? basePrice * exchangeRate
-						: basePrice;
+				// Precio de display en la moneda elegida (VES con tasa, COP fijo
+				// ×4000, USD sin cambio). El carrito siempre guarda basePrice en USD.
+				const displayPrice = convertPrice(basePrice, currency, exchangeRate);
 
 				// Stock del proveedor (productos bajo pedido mapeados por id). Si
 				// existe, gana sobre la lógica local; si no, se mantiene el
