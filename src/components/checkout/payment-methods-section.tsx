@@ -5,19 +5,21 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PAYMENT_METHODS } from "@/constants/payment-methods";
+import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate";
 import type { AvailabilityItem } from "@/hooks/orders/use-availability-check";
 import { useCreateOrder } from "@/hooks/orders/use-create-order";
 import { useServices } from "@/hooks/services/use-services";
 import { useCartStore } from "@/stores/cart-store";
-import { useCurrencyStore } from "@/stores/currency-store";
 import type { DeliveredAccount } from "@/types/delivery";
 import type { ClientFormData, OrderStatus } from "@/types/order-types";
+import { formatPrice } from "@/utils/currency";
+import { getMethodSettlement } from "@/utils/settlement";
 import { PaymentMethodCard } from "./payment-method-card";
 import { AvailabilityCheckStep } from "./payment-steps/availability-check-step";
 import { BinancePaymentStep } from "./payment-steps/binance-payment-step";
 import { CreditCardPaymentStep } from "./payment-steps/credit-card-payment-step";
+import { ManualPaymentStep } from "./payment-steps/manual-payment-step";
 import { OrderConfirmationStep } from "./payment-steps/order-confirmation-step";
-import { PagoMovilPaymentStep } from "./payment-steps/pago-movil-payment-step";
 import { PaymentValidationStep } from "./payment-steps/payment-validation-step";
 import { PayPalPaymentStep } from "./payment-steps/paypal-payment-step";
 
@@ -49,7 +51,7 @@ export function PaymentMethodsSection({
 	const cartItems = useCartStore((state) => state.items);
 	const getTotalPrice = useCartStore((state) => state.getTotalPrice);
 	const clearCart = useCartStore((state) => state.clearCart);
-	const currency = useCurrencyStore((state) => state.currency);
+	const { data: exchangeRate } = useExchangeRate();
 
 	const {
 		mutate: createOrderMutation,
@@ -70,22 +72,36 @@ export function PaymentMethodsSection({
 			months: item.months,
 		}));
 
-	// Calculate total for PayPal using the store's method (includes accounts * months)
+	// Total base en USD para los métodos automáticos (PayPal / tarjeta).
 	const totalAmount = getTotalPrice();
 
 	const selectedMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethodId);
 
+	// Monto a cobrar según el método elegido (moneda de liquidación + recargo COP).
+	const settlement = selectedMethod
+		? getMethodSettlement(selectedMethod, cartItems, exchangeRate)
+		: null;
+
 	const handleContinueToStep2 = async () => {
-		if (!selectedMethodId || !isClientFormValid) return;
+		if (!selectedMethod || !isClientFormValid) return;
+
+		// El monto y la moneda salen del método elegido (no del toggle global):
+		// así PayPal/Binance liquidan en USD y los métodos manuales en su moneda
+		// real, incluido el recargo COP de Bancolombia/Nequi.
+		const orderSettlement = getMethodSettlement(
+			selectedMethod,
+			cartItems,
+			exchangeRate,
+		);
 
 		// Crear la orden en la base de datos
 		const order = await createOrderMutation({
 			client_name: clientData.name,
 			client_phone: clientData.phone,
 			client_email: clientData.email,
-			amount: totalAmount,
-			payment_method: selectedMethod?.name || selectedMethodId,
-			currency: currency,
+			amount: orderSettlement.total,
+			payment_method: selectedMethod.name,
+			currency: orderSettlement.currency,
 			items: cartItems,
 		});
 
@@ -167,9 +183,12 @@ export function PaymentMethodsSection({
 	// Step 3: Confirmation / Validation
 	if (currentStep === 3) {
 		if (orderStatus === "validating" && orderId && receiptUrl) {
+			const totalLabel = settlement
+				? formatPrice(settlement.total, settlement.currency)
+				: `$${totalAmount.toFixed(2)}`;
 			const summary = `${cartItems
 				.map((i) => `${i.title} x${i.quantity}`)
-				.join(", ")} — Total ${totalAmount.toFixed(2)} ${currency}`;
+				.join(", ")} — Total ${totalLabel}`;
 			return (
 				<PaymentValidationStep
 					input={{
@@ -215,6 +234,17 @@ export function PaymentMethodsSection({
 
 	// Step 2: Show payment-specific component
 	if (currentStep === 2 && selectedMethod && orderId) {
+		// Todos los métodos manuales comparten el mismo paso (transferencia +
+		// comprobante), diferenciados por la metadata del método.
+		if (selectedMethod.type === "manual") {
+			return (
+				<ManualPaymentStep
+					method={selectedMethod}
+					onSubmit={handlePagoMovilSubmit}
+					onBack={handleBackToStep1}
+				/>
+			);
+		}
 		switch (selectedMethod.id) {
 			case "binance-pay":
 				return (
@@ -242,14 +272,6 @@ export function PaymentMethodsSection({
 						amount={totalAmount}
 						onSuccess={handleAutomaticDelivered}
 						onError={handlePaymentError}
-						onBack={handleBackToStep1}
-					/>
-				);
-			case "pago-movil":
-				return (
-					<PagoMovilPaymentStep
-						method={selectedMethod}
-						onSubmit={handlePagoMovilSubmit}
 						onBack={handleBackToStep1}
 					/>
 				);

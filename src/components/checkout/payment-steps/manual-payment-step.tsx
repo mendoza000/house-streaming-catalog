@@ -10,28 +10,42 @@ import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate";
 import { useReceiptUpload } from "@/hooks/receipts/use-receipt-upload";
 import { useCartStore } from "@/stores/cart-store";
 import type { ReceiptUploadError } from "@/types/receipt";
-import { convertPrice, formatPrice } from "@/utils/currency";
+import { formatPrice } from "@/utils/currency";
+import { getMethodSettlement } from "@/utils/settlement";
 
-interface PagoMovilPaymentStepProps {
+interface ManualPaymentStepProps {
 	method: PaymentMethod;
 	onSubmit: (receiptUrl: string) => void;
 	onBack: () => void;
 }
 
-export function PagoMovilPaymentStep({
+/** Filas de datos de cuenta a renderizar dinámicamente según el método. */
+const ACCOUNT_FIELDS: Array<{
+	key: keyof NonNullable<PaymentMethod["accountInfo"]>;
+	label: string;
+	mono?: boolean;
+}> = [
+	{ key: "bank", label: "Banco" },
+	{ key: "accountType", label: "Tipo de cuenta" },
+	{ key: "accountNumber", label: "N° de cuenta", mono: true },
+	{ key: "phone", label: "Teléfono", mono: true },
+	{ key: "email", label: "Correo", mono: true },
+	{ key: "holder", label: "Titular" },
+	{ key: "id", label: "Documento", mono: true },
+];
+
+export function ManualPaymentStep({
 	method,
 	onSubmit,
 	onBack,
-}: PagoMovilPaymentStepProps) {
+}: ManualPaymentStepProps) {
 	const [selectedImage, setSelectedImage] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// Get cart total and convert to VES
-	const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+	const items = useCartStore((state) => state.items);
 	const { data: exchangeRate } = useExchangeRate();
-	const baseTotalPrice = getTotalPrice();
-	const totalInVES = convertPrice(baseTotalPrice, "VES", exchangeRate);
+	const settlement = getMethodSettlement(method, items, exchangeRate);
 
 	// Upload mutation
 	const uploadMutation = useReceiptUpload();
@@ -69,10 +83,13 @@ export function PagoMovilPaymentStep({
 		}
 	};
 
+	const accountInfo = method.accountInfo ?? {};
+	const visibleFields = ACCOUNT_FIELDS.filter(({ key }) => accountInfo[key]);
+
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-xl">Pago Móvil</CardTitle>
+				<CardTitle className="text-xl">{method.name}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
 				{/* Account Info */}
@@ -80,44 +97,40 @@ export function PagoMovilPaymentStep({
 					<p className="font-semibold text-sm mb-3">
 						Realiza la transferencia a los siguientes datos:
 					</p>
-					{method.accountInfo?.bank && (
-						<div className="flex items-center justify-between">
-							<span className="text-sm text-muted-foreground">Banco:</span>
-							<span className="font-medium">{method.accountInfo.bank}</span>
-						</div>
-					)}
-					{method.accountInfo?.phone && (
-						<div className="flex items-center justify-between">
-							<span className="text-sm text-muted-foreground">Teléfono:</span>
-							<span className="font-mono font-medium">
-								{method.accountInfo.phone}
+					{visibleFields.map(({ key, label, mono }) => (
+						<div key={key} className="flex items-center justify-between">
+							<span className="text-sm text-muted-foreground">{label}:</span>
+							<span className={mono ? "font-mono font-medium" : "font-medium"}>
+								{accountInfo[key]}
 							</span>
 						</div>
-					)}
-					{method.accountInfo?.holder && (
-						<div className="flex items-center justify-between">
-							<span className="text-sm text-muted-foreground">Titular:</span>
-							<span className="font-medium">{method.accountInfo.holder}</span>
-						</div>
-					)}
-					{method.accountInfo?.id && (
-						<div className="flex items-center justify-between">
-							<span className="text-sm text-muted-foreground">Cédula:</span>
-							<span className="font-mono font-medium">
-								{method.accountInfo.id}
-							</span>
-						</div>
-					)}
+					))}
 				</div>
 
-				{/* Total Amount in VES */}
-				<div className="rounded-lg bg-primary/10 border border-primary/20 p-4">
+				{/* Total Amount */}
+				<div className="rounded-lg bg-primary/10 border border-primary/20 p-4 space-y-2">
+					{settlement.surcharge > 0 && (
+						<>
+							<div className="flex items-center justify-between text-sm text-muted-foreground">
+								<span>Subtotal:</span>
+								<span>
+									{formatPrice(settlement.baseTotal, settlement.currency)}
+								</span>
+							</div>
+							<div className="flex items-center justify-between text-sm text-muted-foreground">
+								<span>Recargo por servicio:</span>
+								<span>
+									+{formatPrice(settlement.surcharge, settlement.currency)}
+								</span>
+							</div>
+						</>
+					)}
 					<div className="flex items-center justify-between">
 						<span className="text-sm font-semibold text-primary">
 							Total a pagar:
 						</span>
 						<span className="text-2xl font-bold text-primary">
-							{formatPrice(totalInVES, "VES")}
+							{formatPrice(settlement.total, settlement.currency)}
 						</span>
 					</div>
 				</div>
