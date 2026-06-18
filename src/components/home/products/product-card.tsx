@@ -27,10 +27,10 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const currency = useCurrencyStore((state) => state.currency);
 
-	// Bajo pedido: no se gestiona stock, se consulta al admin antes de pagar.
 	const isByRequest = product.byRequest === true;
-	// available undefined = todavía sin dato de stock (no bloqueamos).
-	const hasStockData = !isByRequest && product.available !== undefined;
+	// available undefined = sin dato de stock (no bloqueamos). Cuando hay dato
+	// (gestionado local o proveedor) manda sobre el badge "Bajo pedido".
+	const hasStockData = product.available !== undefined;
 	const isSoldOut = hasStockData && (product.available ?? 0) <= 0;
 
 	const handleConfirm = (accounts: number, months: number) => {
@@ -71,19 +71,18 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 							/mes
 						</span>
 					</p>
-					{isByRequest ? (
-						<Badge variant="secondary">Bajo pedido</Badge>
-					) : (
-						hasStockData &&
-						(isSoldOut ? (
+					{hasStockData ? (
+						isSoldOut ? (
 							<Badge variant="destructive">Agotado</Badge>
 						) : (
 							<Badge variant="outline">
 								{product.available} disponible
 								{product.available === 1 ? "" : "s"}
 							</Badge>
-						))
-					)}
+						)
+					) : isByRequest ? (
+						<Badge variant="secondary">Bajo pedido</Badge>
+					) : null}
 				</CardContent>
 				<CardFooter className="mt-auto">
 					<Button
