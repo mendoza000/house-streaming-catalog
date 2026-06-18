@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Product } from "@/constants/products";
 import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate";
+import { useProviderStock } from "@/hooks/services/use-provider-stock";
 import { useServiceStock } from "@/hooks/services/use-service-stock";
 import { useServices } from "@/hooks/services/use-services";
 import { useCartStore } from "@/stores/cart-store";
@@ -20,6 +21,7 @@ export default function Products() {
 
 	const { data: services, isLoading, error } = useServices();
 	const { data: stock } = useServiceStock();
+	const { data: providerStock } = useProviderStock();
 	const { data: exchangeRate } = useExchangeRate();
 
 	const filteredProducts = useMemo(() => {
@@ -35,6 +37,12 @@ export default function Products() {
 						? basePrice * exchangeRate
 						: basePrice;
 
+				// Stock del proveedor (productos bajo pedido mapeados por id). Si
+				// existe, gana sobre la lógica local; si no, se mantiene el
+				// comportamiento previo (gestionado por vista local; resto de bajo
+				// pedido sin stock).
+				const providerAvailable = providerStock?.[service.id];
+
 				return {
 					id: service.id.toString(),
 					name: service.comercial_name ?? "Sin nombre",
@@ -44,8 +52,9 @@ export default function Products() {
 					category: service.category ?? "Otros",
 					image: service.img ?? "",
 					byRequest: service.is_by_request,
-					// Los bajo pedido no exponen stock (se consulta al admin).
-					available: service.is_by_request ? undefined : stock?.[service.id],
+					available:
+						providerAvailable ??
+						(service.is_by_request ? undefined : stock?.[service.id]),
 				};
 			})
 			.filter((product) => {
@@ -57,7 +66,15 @@ export default function Products() {
 
 				return matchesSearch && matchesCategory;
 			});
-	}, [searchQuery, selectedCategory, services, currency, exchangeRate, stock]);
+	}, [
+		searchQuery,
+		selectedCategory,
+		services,
+		currency,
+		exchangeRate,
+		stock,
+		providerStock,
+	]);
 
 	// Categorías reales presentes en los servicios (+ "Todos").
 	const categories = useMemo(() => {
