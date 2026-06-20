@@ -4,6 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > Convenciones de código, nomenclatura, estructura de carpetas y modelo de dominio están documentados en `AGENTS.md`. Leelo primero. Este archivo cubre lo que NO es obvio leyendo el código.
 
+## Ecosistema (3 proyectos, misma Supabase)
+
+Los tres comparten la MISMA base de datos Supabase:
+
+- **house-streaming-catalog** — `C:\Users\mendoza000\dev\projects\core\house-streaming-catalog` (este repo)
+  Catálogo web (Next.js/Bun). Escribe la tabla `orders` (ventas web; `status='completed'` al cobrar).
+- **wabot-v3** — `C:\Users\mendoza000\dev\projects\core\wabot-v3`
+  Bot de WhatsApp (Go). Entrega órdenes web y vende directo por WhatsApp (Superbot). Escribe `sales` + `clients`.
+- **flix-box-ultra** — `C:\Users\mendoza000\dev\projects\webs\flix-box-ultra`
+  Panel admin + métricas (Next.js/pnpm). Lee la DB compartida; el dashboard de métricas de ventas vive en `/metrics`.
+
+Canal de una venta: `sales.order_id` NOT NULL ⇒ vino del catálogo; NULL ⇒ venta directa del wabot.
+
 ## Comandos
 
 ```bash
