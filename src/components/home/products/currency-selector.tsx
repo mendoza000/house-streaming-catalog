@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { type Currency, useCurrencyStore } from "@/stores/currency-store";
 
-const currencies: Currency[] = ["USD", "VES"];
+const currencies: Currency[] = ["USD", "VES", "COP"];
 
 const currencyLabels: Record<Currency, string> = {
 	USD: "USD ($)",
 	VES: "VES (Bs)",
+	COP: "COP ($)",
 };
 
 export function CurrencySelector() {
