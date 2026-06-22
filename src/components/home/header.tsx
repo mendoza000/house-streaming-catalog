@@ -49,6 +49,9 @@ export default function Header() {
 							Contactanos
 						</a>
 					</Button>
+					<Button asChild variant="outline-light" size="lg">
+						<a href="/soporte">Soporte</a>
+					</Button>
 				</div>
 			</div>
 		</header>
