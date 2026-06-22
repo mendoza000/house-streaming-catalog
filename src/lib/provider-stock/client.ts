@@ -1,3 +1,4 @@
+import { number, type ObjectSchema, object } from "yup";
 import { PROVIDER_PRODUCT_TO_SERVICE_ID } from "@/constants/provider-stock";
 
 /**
@@ -14,6 +15,14 @@ import { PROVIDER_PRODUCT_TO_SERVICE_ID } from "@/constants/provider-stock";
 interface ProviderAccountRow {
 	product_id: number | null;
 }
+
+/**
+ * Valida en runtime cada fila que devuelve la REST del proveedor (llega como
+ * `any`). Las filas malformadas se descartan en vez de castear a ciegas.
+ */
+const providerRowSchema: ObjectSchema<ProviderAccountRow> = object({
+	product_id: number().nullable().defined(),
+});
 
 /**
  * Devuelve un mapa { serviceId local: stock } listo para mergear en el catálogo.
@@ -55,14 +64,22 @@ export async function fetchProviderStock(): Promise<{
 			};
 		}
 
-		const rows = (await response.json()) as ProviderAccountRow[];
+		const json = await response.json();
+		const raw = Array.isArray(json) ? json : [];
 
 		// Conteo de cuentas por product_id = stock disponible (lógica del script).
 		const countByProduct: Record<number, number> = {};
-		for (const row of rows) {
-			if (row.product_id == null) continue;
-			countByProduct[row.product_id] =
-				(countByProduct[row.product_id] ?? 0) + 1;
+		for (const row of raw) {
+			let parsed: ProviderAccountRow;
+			try {
+				parsed = providerRowSchema.validateSync(row);
+			} catch {
+				// Fila malformada: la ignoramos.
+				continue;
+			}
+			if (parsed.product_id == null) continue;
+			countByProduct[parsed.product_id] =
+				(countByProduct[parsed.product_id] ?? 0) + 1;
 		}
 
 		// Remapear al id local del servicio. Los product_id fuera del mapa se

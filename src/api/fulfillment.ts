@@ -1,5 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import type { DeliveredAccount } from "@/types/delivery";
+import {
+	type DeliveredAccount,
+	deliveredAccountsSchema,
+} from "@/types/delivery";
 
 /**
  * Funciones de ENTREGA, server-only (cliente service-role).
@@ -36,11 +39,21 @@ export async function fulfillOrder(orderId: number): Promise<FulfillResult> {
 			return { data: null, outOfStock: false, error: new Error(error.message) };
 		}
 
-		return {
-			data: (data ?? []) as unknown as DeliveredAccount[],
-			outOfStock: false,
-			error: null,
-		};
+		// El RPC llega como `any`. Validamos la forma antes de entregar: si viene
+		// malformado preferimos fallar (revisión manual) a entregar basura.
+		let delivered: DeliveredAccount[];
+		try {
+			delivered = deliveredAccountsSchema.validateSync(data ?? []);
+		} catch (validationError) {
+			console.error("fulfill_order returned malformed data:", validationError);
+			return {
+				data: null,
+				outOfStock: false,
+				error: new Error("fulfill_order returned malformed data"),
+			};
+		}
+
+		return { data: delivered, outOfStock: false, error: null };
 	} catch (error) {
 		console.error("Unexpected error fulfilling order:", error);
 		return {

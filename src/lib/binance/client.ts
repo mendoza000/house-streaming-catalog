@@ -1,5 +1,20 @@
 import crypto from "node:crypto";
+import { number, type ObjectSchema, object, string } from "yup";
 import type { BinancePayTransaction } from "@/lib/binance/match-payment";
+
+/**
+ * Valida en runtime cada transacción que devuelve el endpoint de Binance, que
+ * llega como `any`. Las filas malformadas se descartan (no deben tumbar la
+ * detección del resto), en vez de castear el payload entero a ciegas.
+ */
+const binanceTxSchema: ObjectSchema<BinancePayTransaction> = object({
+	orderType: string().required(),
+	transactionId: string().required(),
+	transactionTime: number().required(),
+	amount: string().required(),
+	currency: string().required(),
+	note: string().optional(),
+});
 
 /**
  * Cliente SERVER-ONLY de Binance.
@@ -91,7 +106,17 @@ export async function getPayTransactions(
 			};
 		}
 
-		return { data: (json.data ?? []) as BinancePayTransaction[], error: null };
+		const raw = Array.isArray(json.data) ? json.data : [];
+		const transactions: BinancePayTransaction[] = [];
+		for (const row of raw) {
+			try {
+				transactions.push(binanceTxSchema.validateSync(row));
+			} catch {
+				// Fila malformada: la ignoramos, no debe tumbar el resto.
+			}
+		}
+
+		return { data: transactions, error: null };
 	} catch (error) {
 		console.error("Unexpected error querying Binance:", error);
 		return {
