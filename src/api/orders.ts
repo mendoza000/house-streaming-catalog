@@ -51,7 +51,7 @@ export async function createOrUpdateDraftOrder(
 	data: CreateOrderData,
 ): Promise<{ data: Order | null; error: Error | null }> {
 	try {
-		const cartHash = generateCartHash(data.items);
+		const cartHash = await generateCartHash(data.items);
 
 		// Buscar draft existente
 		const { data: existingDraft } = await findDraftOrder(
