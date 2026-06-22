@@ -3,41 +3,10 @@ import { fulfillOrder } from "@/api/fulfillment";
 import { completeOrderWithReference, getOrderAdmin } from "@/api/orders-admin";
 import { renewOrder } from "@/api/renewals";
 import { expectedUsdAmount } from "@/lib/paypal/amount";
-
-const PAYPAL_API_BASE =
-	process.env.NODE_ENV === "production"
-		? "https://api-m.paypal.com"
-		: "https://api-m.sandbox.paypal.com";
+import { getPayPalAccessToken, PAYPAL_API_BASE } from "@/lib/paypal/client";
 
 /** Tolerancia al comparar el monto capturado vs el esperado (centavos). */
 const AMOUNT_TOLERANCE_USD = 0.01;
-
-async function getAccessToken(): Promise<string> {
-	const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-	const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-
-	if (!clientId || !clientSecret) {
-		throw new Error("PayPal credentials not configured");
-	}
-
-	const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-
-	const response = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
-		method: "POST",
-		headers: {
-			Authorization: `Basic ${auth}`,
-			"Content-Type": "application/x-www-form-urlencoded",
-		},
-		body: "grant_type=client_credentials",
-	});
-
-	if (!response.ok) {
-		throw new Error("Failed to get PayPal access token");
-	}
-
-	const data = await response.json();
-	return data.access_token;
-}
 
 /** Extrae el primer capture (id + monto) del payload de captura de PayPal. */
 function extractCapture(
@@ -119,7 +88,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// 2. Capturar el pago en PayPal
-		const accessToken = await getAccessToken();
+		const accessToken = await getPayPalAccessToken();
 		const response = await fetch(
 			`${PAYPAL_API_BASE}/v2/checkout/orders/${paypalOrderId}/capture`,
 			{
