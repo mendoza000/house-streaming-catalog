@@ -1,27 +1,11 @@
 "use client";
 
-import { AlertCircle, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PAYMENT_METHODS } from "@/constants/payment-methods";
-import { useExchangeRate } from "@/hooks/exchange-rate/use-exchange-rate";
-import type { AvailabilityItem } from "@/hooks/orders/use-availability-check";
-import { useCreateOrder } from "@/hooks/orders/use-create-order";
-import { useServices } from "@/hooks/services/use-services";
-import { useCartStore } from "@/stores/cart-store";
-import type { DeliveredAccount } from "@/types/delivery";
-import type { ClientFormData, OrderStatus } from "@/types/order-types";
-import { formatPrice } from "@/utils/currency";
-import { getMethodSettlement } from "@/utils/settlement";
-import { PaymentMethodCard } from "./payment-method-card";
+import { usePaymentFlow } from "@/hooks/orders/use-payment-flow";
+import type { ClientFormData } from "@/types/order-types";
+import { OrderCompletion } from "./order-completion";
+import { PaymentMethodDispatcher } from "./payment-method-dispatcher";
+import { PaymentMethodSelection } from "./payment-method-selection";
 import { AvailabilityCheckStep } from "./payment-steps/availability-check-step";
-import { BinancePaymentStep } from "./payment-steps/binance-payment-step";
-import { CreditCardPaymentStep } from "./payment-steps/credit-card-payment-step";
-import { ManualPaymentStep } from "./payment-steps/manual-payment-step";
-import { OrderConfirmationStep } from "./payment-steps/order-confirmation-step";
-import { PaymentValidationStep } from "./payment-steps/payment-validation-step";
-import { PayPalPaymentStep } from "./payment-steps/paypal-payment-step";
 
 interface PaymentMethodsSectionProps {
 	onStepChange?: (step: number) => void;
@@ -34,315 +18,72 @@ export function PaymentMethodsSection({
 	clientData,
 	isClientFormValid,
 }: PaymentMethodsSectionProps) {
-	const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-	const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
-	const [orderStatus, setOrderStatus] = useState<OrderStatus>("pending");
-	const [orderId, setOrderId] = useState<number | null>(null);
-	const [trackingToken, setTrackingToken] = useState<string | null>(null);
-	const [deliveredAccounts, setDeliveredAccounts] = useState<
-		DeliveredAccount[]
-	>([]);
-	// Cuando el carrito tiene servicios bajo pedido, se consulta disponibilidad
-	// antes de habilitar el pago.
-	const [awaitingAvailability, setAwaitingAvailability] = useState(false);
-	// URL del comprobante subido (Pago Móvil), para la validación por Telegram.
-	const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+	const flow = usePaymentFlow({ clientData, isClientFormValid, onStepChange });
 
-	const cartItems = useCartStore((state) => state.items);
-	const getTotalPrice = useCartStore((state) => state.getTotalPrice);
-	const clearCart = useCartStore((state) => state.clearCart);
-	const { data: exchangeRate } = useExchangeRate();
-
-	const {
-		mutate: createOrderMutation,
-		isLoading: isCreatingOrder,
-		error: createOrderError,
-	} = useCreateOrder();
-	const { data: services } = useServices();
-
-	// Ítems del carrito que son "bajo pedido" (requieren consultar disponibilidad).
-	const byRequestServiceIds = new Set(
-		(services ?? []).filter((s) => s.is_by_request).map((s) => s.id),
-	);
-	const byRequestItems: AvailabilityItem[] = cartItems
-		.filter((item) => byRequestServiceIds.has(Number(item.id)))
-		.map((item) => ({
-			serviceId: Number(item.id),
-			title: item.title,
-			months: item.months,
-		}));
-
-	// Total base en USD para los métodos automáticos (PayPal / tarjeta).
-	const totalAmount = getTotalPrice();
-
-	const selectedMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethodId);
-
-	// Monto a cobrar según el método elegido (moneda de liquidación + recargo COP).
-	const settlement = selectedMethod
-		? getMethodSettlement(selectedMethod, cartItems, exchangeRate)
-		: null;
-
-	const handleContinueToStep2 = async () => {
-		if (!selectedMethod || !isClientFormValid) return;
-
-		// El monto y la moneda salen del método elegido (no del toggle global):
-		// así PayPal/Binance liquidan en USD y los métodos manuales en su moneda
-		// real, incluido el recargo COP de Bancolombia/Nequi.
-		const orderSettlement = getMethodSettlement(
-			selectedMethod,
-			cartItems,
-			exchangeRate,
+	// Step 3: confirmación / validación (solo si la orden llegó a un estado terminal).
+	const isCompletionVisible =
+		flow.currentStep === 3 &&
+		Boolean(
+			(flow.orderStatus === "validating" && flow.orderId && flow.receiptUrl) ||
+				flow.orderStatus === "completed",
 		);
 
-		// Crear la orden en la base de datos
-		const order = await createOrderMutation({
-			client_name: clientData.name,
-			client_phone: clientData.phone,
-			client_email: clientData.email,
-			amount: orderSettlement.total,
-			payment_method: selectedMethod.name,
-			currency: orderSettlement.currency,
-			items: cartItems,
-		});
-
-		if (order) {
-			setOrderId(order.id);
-			setTrackingToken(order.tracking_token);
-			onStepChange?.(2);
-			// Si hay servicios bajo pedido, consultar disponibilidad antes de pagar.
-			if (byRequestItems.length > 0) {
-				setAwaitingAvailability(true);
-			} else {
-				setCurrentStep(2);
-			}
-		}
-	};
-
-	const handleAvailabilityConfirmed = () => {
-		setAwaitingAvailability(false);
-		setCurrentStep(2);
-	};
-
-	const handleAvailabilityBack = () => {
-		setAwaitingAvailability(false);
-		handleBackToStep1();
-	};
-
-	const handleBackToStep1 = () => {
-		// No hacer nada con la orden, se mantiene en draft
-		// El usuario puede volver a continuar y se reutilizará la misma orden
-		setCurrentStep(1);
-		onStepChange?.(1);
-	};
-
-	// PayPal / tarjeta: el server capturó el pago, marcó la orden `completed` Y la
-	// entregó (service-role, bypasea RLS). Acá solo reflejamos estado + lo
-	// entregado, sin escribir a DB desde el cliente (la RLS lo bloquearía).
-	const handleAutomaticDelivered = (delivered: DeliveredAccount[]) => {
-		setDeliveredAccounts(delivered);
-		setOrderStatus("completed");
-		setCurrentStep(3);
-		onStepChange?.(3);
-		clearCart();
-	};
-
-	// Binance: el server ya marcó la orden `completed` Y la entregó (devuelve las
-	// credenciales). Acá solo reflejamos estado + lo entregado, sin re-escribir DB.
-	const handleBinanceVerified = (delivered: DeliveredAccount[]) => {
-		setDeliveredAccounts(delivered);
-		setOrderStatus("completed");
-		setCurrentStep(3);
-		onStepChange?.(3);
-		clearCart();
-	};
-
-	// Pago Móvil: subió el comprobante → crear ticket de validación y pasar al
-	// paso "Validando…". El admin aprueba/rechaza por Telegram.
-	const handlePagoMovilSubmit = (uploadedReceiptUrl: string) => {
-		// La orden se marca 'validating' server-side al crear el ticket (dentro
-		// de createPaymentValidationRequest), así que acá solo cambiamos de paso.
-		setReceiptUrl(uploadedReceiptUrl);
-		setOrderStatus("validating");
-		setCurrentStep(3);
-		onStepChange?.(3);
-	};
-
-	// El admin aprobó el pago: el trigger ya completó/entregó la orden server-side.
-	// Acá reflejamos las credenciales y pasamos a la confirmación.
-	const handlePaymentValidationApproved = (delivered: DeliveredAccount[]) => {
-		setDeliveredAccounts(delivered);
-		setOrderStatus("completed");
-		clearCart();
-	};
-
-	const handlePaymentError = (error: unknown) => {
-		console.error("Payment error:", error);
-		// TODO: Show error message to user
-	};
-
-	// Step 3: Confirmation / Validation
-	if (currentStep === 3) {
-		if (orderStatus === "validating" && orderId && receiptUrl) {
-			const totalLabel = settlement
-				? formatPrice(settlement.total, settlement.currency)
-				: `$${totalAmount.toFixed(2)}`;
-			const summary = `${cartItems
-				.map((i) => `${i.title} x${i.quantity}`)
-				.join(", ")} — Total ${totalLabel}`;
-			return (
-				<PaymentValidationStep
-					input={{
-						orderId,
-						clientName: clientData.name,
-						clientPhone: clientData.phone,
-						receiptUrl,
-						description: summary,
-					}}
-					onApproved={handlePaymentValidationApproved}
-				/>
-			);
-		}
-
-		if (orderStatus === "completed") {
-			return (
-				<OrderConfirmationStep
-					orderInfo={{
-						id: orderId?.toString() ?? "0",
-						status: "completed",
-						paymentMethod: selectedMethod?.name ?? "Desconocido",
-						totalAmount: totalAmount,
-						createdAt: new Date(),
-						trackingToken: trackingToken ?? undefined,
-					}}
-					deliveredAccounts={deliveredAccounts}
-				/>
-			);
-		}
-	}
-
-	// Paso intermedio: consultar disponibilidad de servicios bajo pedido.
-	if (awaitingAvailability && orderId) {
+	if (isCompletionVisible) {
 		return (
-			<AvailabilityCheckStep
-				items={byRequestItems}
-				client={{ name: clientData.name, phone: clientData.phone }}
-				onAllAvailable={handleAvailabilityConfirmed}
-				onBack={handleAvailabilityBack}
+			<OrderCompletion
+				orderStatus={flow.orderStatus}
+				orderId={flow.orderId}
+				receiptUrl={flow.receiptUrl}
+				clientData={clientData}
+				selectedMethod={flow.selectedMethod}
+				settlement={flow.settlement}
+				totalAmount={flow.totalAmount}
+				cartItems={flow.cartItems}
+				trackingToken={flow.trackingToken}
+				deliveredAccounts={flow.deliveredAccounts}
+				onValidationApproved={flow.handlePaymentValidationApproved}
 			/>
 		);
 	}
 
-	// Step 2: Show payment-specific component
-	if (currentStep === 2 && selectedMethod && orderId) {
-		// Todos los métodos manuales comparten el mismo paso (transferencia +
-		// comprobante), diferenciados por la metadata del método.
-		if (selectedMethod.type === "manual") {
-			return (
-				<ManualPaymentStep
-					method={selectedMethod}
-					onSubmit={handlePagoMovilSubmit}
-					onBack={handleBackToStep1}
-				/>
-			);
-		}
-		switch (selectedMethod.id) {
-			case "binance-pay":
-				return (
-					<BinancePaymentStep
-						method={selectedMethod}
-						orderId={orderId}
-						onVerify={handleBinanceVerified}
-						onBack={handleBackToStep1}
-					/>
-				);
-			case "paypal":
-				return (
-					<PayPalPaymentStep
-						orderId={orderId}
-						amount={totalAmount}
-						onSuccess={handleAutomaticDelivered}
-						onError={handlePaymentError}
-						onBack={handleBackToStep1}
-					/>
-				);
-			case "credit-card":
-				return (
-					<CreditCardPaymentStep
-						orderId={orderId}
-						amount={totalAmount}
-						onSuccess={handleAutomaticDelivered}
-						onError={handlePaymentError}
-						onBack={handleBackToStep1}
-					/>
-				);
-			default:
-				return null;
-		}
+	// Paso intermedio: consultar disponibilidad de servicios bajo pedido.
+	if (flow.awaitingAvailability && flow.orderId) {
+		return (
+			<AvailabilityCheckStep
+				items={flow.byRequestItems}
+				client={{ name: clientData.name, phone: clientData.phone }}
+				onAllAvailable={flow.handleAvailabilityConfirmed}
+				onBack={flow.handleAvailabilityBack}
+			/>
+		);
 	}
 
-	// Step 1: Payment method selection
+	// Step 2: componente de pago según el método elegido.
+	if (flow.currentStep === 2 && flow.selectedMethod && flow.orderId) {
+		return (
+			<PaymentMethodDispatcher
+				method={flow.selectedMethod}
+				orderId={flow.orderId}
+				amount={flow.totalAmount}
+				onAutomaticDelivered={flow.handleAutomaticDelivered}
+				onBinanceVerified={flow.handleBinanceVerified}
+				onManualSubmit={flow.handlePagoMovilSubmit}
+				onPaymentError={flow.handlePaymentError}
+				onBack={flow.handleBackToStep1}
+			/>
+		);
+	}
+
+	// Step 1: selección de método de pago.
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="text-2xl">Selecciona un método de pago</CardTitle>
-			</CardHeader>
-			<CardContent className="space-y-4">
-				{/* Payment Methods */}
-				<div className="space-y-3">
-					{PAYMENT_METHODS.map((method) => (
-						<PaymentMethodCard
-							key={method.id}
-							method={method}
-							isSelected={selectedMethodId === method.id}
-							onSelect={() => setSelectedMethodId(method.id)}
-						/>
-					))}
-				</div>
-
-				{/* Error Message */}
-				{createOrderError && (
-					<div className="flex items-center gap-2 rounded-md border border-destructive bg-destructive/10 p-3">
-						<AlertCircle className="size-4 text-destructive shrink-0" />
-						<p className="text-sm text-destructive">
-							Error al crear la orden. Por favor, intenta de nuevo.
-						</p>
-					</div>
-				)}
-
-				{/* Continue Button */}
-				<Button
-					size="lg"
-					className="w-full"
-					disabled={
-						!selectedMethodId ||
-						cartItems.length === 0 ||
-						!isClientFormValid ||
-						isCreatingOrder
-					}
-					onClick={handleContinueToStep2}
-				>
-					{isCreatingOrder ? (
-						<>
-							<Loader2 className="mr-2 size-4 animate-spin" />
-							Creando orden...
-						</>
-					) : (
-						"Continuar con el pago"
-					)}
-				</Button>
-
-				{!selectedMethodId && cartItems.length > 0 && isClientFormValid && (
-					<p className="text-center text-sm text-muted-foreground">
-						Selecciona un método de pago para continuar
-					</p>
-				)}
-
-				{!isClientFormValid && cartItems.length > 0 && (
-					<p className="text-center text-sm text-muted-foreground">
-						Completa tus datos para continuar
-					</p>
-				)}
-			</CardContent>
-		</Card>
+		<PaymentMethodSelection
+			selectedMethodId={flow.selectedMethodId}
+			onSelect={flow.setSelectedMethodId}
+			onContinue={flow.handleContinueToStep2}
+			cartItems={flow.cartItems}
+			isClientFormValid={isClientFormValid}
+			isCreatingOrder={flow.isCreatingOrder}
+			hasCreateOrderError={Boolean(flow.createOrderError)}
+		/>
 	);
 }
