@@ -26,6 +26,7 @@ function ButtonGroup({
 	...props
 }: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>) {
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: role="group" is the intended ARIA for a generic button group; no single semantic element fits
 		<div
 			role="group"
 			data-slot="button-group"

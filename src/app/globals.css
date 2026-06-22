@@ -127,8 +127,10 @@
 	}
 
 	@supports (view-transition-name: none) {
+		/* biome-ignore lint/correctness/noUnknownTypeSelector: valid View Transition API pseudo-elements Biome's CSS parser doesn't know */
 		::view-transition-old(root),
-		::view-transition-new(root) {
+		/* biome-ignore lint/correctness/noUnknownTypeSelector: valid View Transition API pseudo-elements Biome's CSS parser doesn't know */
+			::view-transition-new(root) {
 			animation-duration: 0.2s;
 		}
 	}
@@ -136,12 +138,15 @@
 	/* PayPal button container transparent background fix */
 	.paypal-buttons-container,
 	.paypal-buttons-container * {
+		/* biome-ignore lint/complexity/noImportantStyles: required to override PayPal's injected iframe styles */
 		background: transparent !important;
+		/* biome-ignore lint/complexity/noImportantStyles: required to override PayPal's injected iframe styles */
 		background-color: transparent !important;
 	}
 
 	/* Ensure PayPal iframes inherit transparent background */
 	.paypal-buttons-container iframe {
+		/* biome-ignore lint/complexity/noImportantStyles: required to override PayPal's injected iframe styles */
 		background: transparent !important;
 	}
 }
