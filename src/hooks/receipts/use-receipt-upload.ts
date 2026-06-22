@@ -13,7 +13,13 @@ export const receiptKeys = {
  */
 export function useReceiptUpload() {
 	return useMutation<ReceiptUploadResult, Error, File>({
-		mutationFn: uploadReceipt,
+		mutationFn: async (file) => {
+			// uploadReceipt follows the api/ result-tuple contract; re-throw here so
+			// TanStack Query surfaces the error to consumers as before.
+			const { data, error } = await uploadReceipt(file);
+			if (error) throw error;
+			return data as ReceiptUploadResult;
+		},
 		mutationKey: receiptKeys.upload,
 	});
 }

@@ -38,56 +38,84 @@ function generateFileName(file: File): string {
 }
 
 /**
- * Uploads a receipt image to Supabase Storage
+ * Uploads a receipt image to Supabase Storage.
+ * Follows the api/ result-tuple contract: never throws, returns { data, error }.
  * @param file - The image file to upload
- * @returns The path and public URL of the uploaded file
- * @throws ReceiptUploadError if validation or upload fails
+ * @returns The path and public URL of the uploaded file, or a typed error
  */
-export async function uploadReceipt(file: File): Promise<ReceiptUploadResult> {
-	// Validate file
-	const validationError = validateFile(file);
-	if (validationError) {
-		throw validationError;
+export async function uploadReceipt(file: File): Promise<{
+	data: ReceiptUploadResult | null;
+	error: ReceiptUploadError | null;
+}> {
+	try {
+		const validationError = validateFile(file);
+		if (validationError) {
+			return { data: null, error: validationError };
+		}
+
+		const fileName = generateFileName(file);
+
+		const { data, error } = await supabase.storage
+			.from(BUCKET_NAME)
+			.upload(fileName, file, {
+				cacheControl: "3600",
+				upsert: false,
+			});
+
+		if (error) {
+			return {
+				data: null,
+				error: {
+					code: "UPLOAD_FAILED",
+					message: `Error al subir el archivo: ${error.message}`,
+				},
+			};
+		}
+
+		const {
+			data: { publicUrl },
+		} = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path);
+
+		return { data: { path: data.path, publicUrl }, error: null };
+	} catch (error) {
+		return {
+			data: null,
+			error: {
+				code: "UPLOAD_FAILED",
+				message:
+					error instanceof Error
+						? error.message
+						: "Error inesperado al subir el archivo.",
+			},
+		};
 	}
-
-	// Generate unique filename
-	const fileName = generateFileName(file);
-
-	// Upload to Supabase Storage
-	const { data, error } = await supabase.storage
-		.from(BUCKET_NAME)
-		.upload(fileName, file, {
-			cacheControl: "3600",
-			upsert: false,
-		});
-
-	if (error) {
-		throw {
-			code: "UPLOAD_FAILED",
-			message: `Error al subir el archivo: ${error.message}`,
-		} as ReceiptUploadError;
-	}
-
-	// Get public URL
-	const {
-		data: { publicUrl },
-	} = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path);
-
-	return {
-		path: data.path,
-		publicUrl,
-	};
 }
 
 /**
- * Deletes a receipt from Supabase Storage
- * Used for cleanup/rollback scenarios
+ * Deletes a receipt from Supabase Storage.
+ * Used for cleanup/rollback scenarios. Follows the api/ result-tuple contract.
  */
-export async function deleteReceipt(path: string): Promise<void> {
-	const { error } = await supabase.storage.from(BUCKET_NAME).remove([path]);
+export async function deleteReceipt(
+	path: string,
+): Promise<{ data: null; error: Error | null }> {
+	try {
+		const { error } = await supabase.storage.from(BUCKET_NAME).remove([path]);
 
-	if (error) {
-		console.error("Error deleting receipt:", error);
-		throw new Error(`Failed to delete receipt: ${error.message}`);
+		if (error) {
+			console.error("Error deleting receipt:", error);
+			return {
+				data: null,
+				error: new Error(`Failed to delete receipt: ${error.message}`),
+			};
+		}
+
+		return { data: null, error: null };
+	} catch (error) {
+		console.error("Unexpected error deleting receipt:", error);
+		return {
+			data: null,
+			error:
+				error instanceof Error ? error : new Error("Failed to delete receipt"),
+		};
 	}
 }
