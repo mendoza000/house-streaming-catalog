@@ -10,10 +10,13 @@ interface DeliveredAccountsCardProps {
 }
 
 const formatExpiry = (iso: string) =>
+	// timeZone UTC: expires_at es medianoche UTC del día de pago; sin esto se
+	// renderiza un día antes en husos negativos (VE/CO).
 	new Date(iso).toLocaleDateString("es-VE", {
 		day: "numeric",
 		month: "long",
 		year: "numeric",
+		timeZone: "UTC",
 	});
 
 /**
