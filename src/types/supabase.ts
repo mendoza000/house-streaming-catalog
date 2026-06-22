@@ -262,6 +262,7 @@ export type Database = {
 					currency: string | null;
 					id: number;
 					items: Json | null;
+					kind: string;
 					payment_method: string | null;
 					payment_reference: string | null;
 					status: string | null;
@@ -277,6 +278,7 @@ export type Database = {
 					currency?: string | null;
 					id?: number;
 					items?: Json | null;
+					kind?: string;
 					payment_method?: string | null;
 					payment_reference?: string | null;
 					status?: string | null;
@@ -292,12 +294,58 @@ export type Database = {
 					currency?: string | null;
 					id?: number;
 					items?: Json | null;
+					kind?: string;
 					payment_method?: string | null;
 					payment_reference?: string | null;
 					status?: string | null;
 					tracking_token?: string;
 				};
 				Relationships: [];
+			};
+			renewals: {
+				Row: {
+					client_id: number;
+					created_at: string;
+					id: number;
+					months: number;
+					new_expires_at: string;
+					old_expires_at: string | null;
+					order_id: number;
+				};
+				Insert: {
+					client_id: number;
+					created_at?: string;
+					id?: number;
+					months: number;
+					new_expires_at: string;
+					old_expires_at?: string | null;
+					order_id: number;
+				};
+				Update: {
+					client_id?: number;
+					created_at?: string;
+					id?: number;
+					months?: number;
+					new_expires_at?: string;
+					old_expires_at?: string | null;
+					order_id?: number;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "renewals_client_id_fkey";
+						columns: ["client_id"];
+						isOneToOne: false;
+						referencedRelation: "clients";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "renewals_order_id_fkey";
+						columns: ["order_id"];
+						isOneToOne: false;
+						referencedRelation: "orders";
+						referencedColumns: ["id"];
+					},
+				];
 			};
 			resellers: {
 				Row: {
@@ -523,6 +571,18 @@ export type Database = {
 		};
 		Functions: {
 			fulfill_order: { Args: { p_order_id: number }; Returns: Json };
+			renew_order: { Args: { p_order_id: number }; Returns: Json };
+			lookup_renewable_accounts: {
+				Args: { p_phone: string };
+				Returns: {
+					client_id: number;
+					service_id: number;
+					service: string;
+					screen: number;
+					expires_at: string | null;
+					screen_price: number;
+				}[];
+			};
 		};
 		Enums: {
 			[_ in never]: never;
@@ -665,3 +725,8 @@ export type TicketInsert = Database["public"]["Tables"]["tickets"]["Insert"];
 export type Order = Database["public"]["Tables"]["orders"]["Row"];
 export type OrderInsert = Database["public"]["Tables"]["orders"]["Insert"];
 export type OrderUpdate = Database["public"]["Tables"]["orders"]["Update"];
+export type Client = Database["public"]["Tables"]["clients"]["Row"];
+export type Renewal = Database["public"]["Tables"]["renewals"]["Row"];
+/** Fila no sensible que devuelve lookup_renewable_accounts (sin credenciales). */
+export type RenewableAccount =
+	Database["public"]["Functions"]["lookup_renewable_accounts"]["Returns"][number];

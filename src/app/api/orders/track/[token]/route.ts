@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { fulfillOrder } from "@/api/fulfillment";
 import { getOrderByTrackingToken } from "@/api/orders-admin";
+import { renewOrder } from "@/api/renewals";
 import type { OrderTrackingResponse } from "@/types/order-types";
 
 /**
@@ -34,18 +35,28 @@ export async function GET(
 			amount: order.amount,
 			currency: order.currency,
 			items: order.items,
+			kind: order.kind,
 			delivered: null,
+			renewed: null,
 			outOfStock: false,
 		};
 
-		// Solo se entregan credenciales de órdenes pagadas.
+		// Órdenes pagadas: renovación → nuevo vencimiento; compra → credenciales.
 		if (order.status === "completed") {
-			const { data, outOfStock, error } = await fulfillOrder(order.id);
-			if (error) {
-				return NextResponse.json({ error: error.message }, { status: 500 });
+			if (order.kind === "renewal") {
+				const { data, error } = await renewOrder(order.id);
+				if (error) {
+					return NextResponse.json({ error: error.message }, { status: 500 });
+				}
+				base.renewed = data;
+			} else {
+				const { data, outOfStock, error } = await fulfillOrder(order.id);
+				if (error) {
+					return NextResponse.json({ error: error.message }, { status: 500 });
+				}
+				base.outOfStock = outOfStock;
+				base.delivered = data;
 			}
-			base.outOfStock = outOfStock;
-			base.delivered = data;
 		}
 
 		return NextResponse.json(base);

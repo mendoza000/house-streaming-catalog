@@ -11,12 +11,17 @@ import { useReceiptUpload } from "@/hooks/receipts/use-receipt-upload";
 import { useCartStore } from "@/stores/cart-store";
 import type { ReceiptUploadError } from "@/types/receipt";
 import { formatPrice } from "@/utils/currency";
-import { getMethodSettlement } from "@/utils/settlement";
+import { getMethodSettlement, type MethodSettlement } from "@/utils/settlement";
 
 interface ManualPaymentStepProps {
 	method: PaymentMethod;
 	onSubmit: (receiptUrl: string) => void;
 	onBack: () => void;
+	/**
+	 * Total a cobrar. Si se omite, se calcula del carrito (checkout de compra). La
+	 * renovación lo pasa explícito porque no usa el carrito.
+	 */
+	settlement?: MethodSettlement;
 }
 
 /** Filas de datos de cuenta a renderizar dinámicamente según el método. */
@@ -38,6 +43,7 @@ export function ManualPaymentStep({
 	method,
 	onSubmit,
 	onBack,
+	settlement: settlementOverride,
 }: ManualPaymentStepProps) {
 	const [selectedImage, setSelectedImage] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -45,7 +51,8 @@ export function ManualPaymentStep({
 
 	const items = useCartStore((state) => state.items);
 	const { data: exchangeRate } = useExchangeRate();
-	const settlement = getMethodSettlement(method, items, exchangeRate);
+	const settlement =
+		settlementOverride ?? getMethodSettlement(method, items, exchangeRate);
 
 	// Upload mutation
 	const uploadMutation = useReceiptUpload();

@@ -1,5 +1,6 @@
 import type { CartItem } from "@/stores/cart-store";
 import type { DeliveredAccount } from "@/types/delivery";
+import type { RenewalResultItem } from "@/types/renewal-types";
 import type { Json } from "@/types/supabase";
 
 export type OrderStatus =
@@ -28,8 +29,12 @@ export interface OrderTrackingResponse {
 	amount: number | null;
 	currency: string | null;
 	items: Json | null;
-	/** Credenciales entregadas; null salvo que la orden esté `completed`. */
+	/** 'purchase' (entrega de credenciales) | 'renewal' (extensión de vencimiento). */
+	kind: string;
+	/** Credenciales entregadas; null salvo compra `completed`. */
 	delivered: DeliveredAccount[] | null;
+	/** Pantallas renovadas con su nuevo vencimiento; null salvo renovación `completed`. */
+	renewed: RenewalResultItem[] | null;
 	outOfStock: boolean;
 }
 

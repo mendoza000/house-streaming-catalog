@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { fulfillOrder } from "@/api/fulfillment";
 import { getOrderAdmin } from "@/api/orders-admin";
+import { renewOrder } from "@/api/renewals";
 
 /**
  * POST /api/orders/fulfill
@@ -32,6 +33,18 @@ export async function POST(request: NextRequest) {
 				{ error: "Order is not paid yet" },
 				{ status: 409 },
 			);
+		}
+
+		// Renovación: extender vencimiento (no asignar cuentas nuevas).
+		if (order.kind === "renewal") {
+			const { data: renewed, error: renewError } = await renewOrder(orderId);
+			if (renewError) {
+				return NextResponse.json(
+					{ error: renewError.message },
+					{ status: 500 },
+				);
+			}
+			return NextResponse.json({ fulfilled: true, renewed: renewed ?? [] });
 		}
 
 		const { data, outOfStock, error } = await fulfillOrder(orderId);

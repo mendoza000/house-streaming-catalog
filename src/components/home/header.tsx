@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 
 export default function Header() {
 	return (
-		<header className="relative border-2 shadow-lg w-full min-h-[50vh] rounded-2xl my-5 overflow-hidden flex flex-col items-center justify-center gap-4 px-6 py-12 mt-20">
+		<header className="relative border-2 shadow-lg mx-4 min-h-[50vh] rounded-2xl my-5 overflow-hidden flex flex-col items-center justify-center gap-4 px-6 py-12 mt-20">
 			{/* Imagen de fondo */}
 			<div className="absolute inset-0 z-0">
 				<Image
@@ -40,7 +40,14 @@ export default function Header() {
 					<Button asChild size="lg">
 						<a href="#catalogo">Comenzar</a>
 					</Button>
-					<Button asChild variant="outline-light" size="lg">
+					{/* En mobile estas acciones viven en "Accesos rápidos" (QuickActions);
+					    se ocultan acá para no duplicarlas. */}
+					<Button
+						asChild
+						variant="outline-light"
+						size="lg"
+						className="hidden md:inline-flex"
+					>
 						<a
 							href={getWhatsAppUrl()}
 							target="_blank"
@@ -49,7 +56,12 @@ export default function Header() {
 							Contactanos
 						</a>
 					</Button>
-					<Button asChild variant="outline-light" size="lg">
+					<Button
+						asChild
+						variant="outline-light"
+						size="lg"
+						className="hidden md:inline-flex"
+					>
 						<a href="/soporte">Soporte</a>
 					</Button>
 				</div>
