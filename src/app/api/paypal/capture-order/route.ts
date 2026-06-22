@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { fulfillOrder } from "@/api/fulfillment";
 import { completeOrderWithReference, getOrderAdmin } from "@/api/orders-admin";
+import { renewOrder } from "@/api/renewals";
 import { expectedUsdAmount } from "@/lib/paypal/amount";
 
 const PAYPAL_API_BASE =
@@ -91,8 +92,17 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Order not found" }, { status: 404 });
 		}
 
-		// Ya estaba completada: reintentar la entrega (idempotente) y devolverla.
+		// Ya estaba completada: reintentar la entrega/renovación (idempotente).
 		if (order.status === "completed") {
+			if (order.kind === "renewal") {
+				const { data: renewed } = await renewOrder(orderId);
+				return NextResponse.json({
+					captured: true,
+					alreadyCompleted: true,
+					renewed: renewed ?? [],
+					outOfStock: false,
+				});
+			}
 			const { data: delivered, outOfStock } = await fulfillOrder(orderId);
 			return NextResponse.json({
 				captured: true,
@@ -185,7 +195,17 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// 5. Entregar la cuenta real en el mismo viaje
+		// 5. Renovación: extender vencimiento. Compra: entregar la cuenta real.
+		if (order.kind === "renewal") {
+			const { data: renewed } = await renewOrder(orderId);
+			return NextResponse.json({
+				captured: true,
+				transactionId: capture.id,
+				renewed: renewed ?? [],
+				outOfStock: false,
+			});
+		}
+
 		const { data: delivered, outOfStock } = await fulfillOrder(orderId);
 
 		return NextResponse.json({

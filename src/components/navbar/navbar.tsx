@@ -17,6 +17,7 @@ import { ThemeToggle } from "./theme-toggle";
 
 const LINKS = [
 	{ href: "/", label: "Inicio" },
+	{ href: "/mis-cuentas", label: "Renovar" },
 	{ href: "/quienes-somos", label: "Quiénes somos" },
 ];
 

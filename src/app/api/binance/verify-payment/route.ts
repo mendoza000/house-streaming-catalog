@@ -6,6 +6,7 @@ import {
 	findOrderByPaymentReference,
 	getOrderAdmin,
 } from "@/api/orders-admin";
+import { renewOrder } from "@/api/renewals";
 import { getPayTransactions } from "@/lib/binance/client";
 import { findMatchingTransactions } from "@/lib/binance/match-payment";
 
@@ -38,8 +39,17 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Order not found" }, { status: 404 });
 		}
 
-		// Ya estaba completada: reintentar la entrega (idempotente) y devolverla.
+		// Ya estaba completada: reintentar la entrega/renovación (idempotente).
 		if (order.status === "completed") {
+			if (order.kind === "renewal") {
+				const { data: renewed } = await renewOrder(orderId);
+				return NextResponse.json({
+					matched: true,
+					alreadyCompleted: true,
+					renewed: renewed ?? [],
+					outOfStock: false,
+				});
+			}
 			const { data: delivered, outOfStock } = await fulfillOrder(orderId);
 			return NextResponse.json({
 				matched: true,
@@ -112,7 +122,18 @@ export async function POST(request: NextRequest) {
 				);
 			}
 
-			// Pago confirmado → entregar la cuenta real en el mismo viaje.
+			// Pago confirmado → renovación extiende vencimiento; compra entrega cuenta.
+			if (order.kind === "renewal") {
+				const { data: renewed } = await renewOrder(orderId);
+				return NextResponse.json({
+					matched: true,
+					order: completed,
+					transactionId: tx.transactionId,
+					renewed: renewed ?? [],
+					outOfStock: false,
+				});
+			}
+
 			const { data: delivered, outOfStock } = await fulfillOrder(orderId);
 
 			return NextResponse.json({

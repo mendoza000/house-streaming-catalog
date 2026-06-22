@@ -4,6 +4,7 @@ import { CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
 import { DeliveredAccountsCard } from "@/components/orden/delivered-accounts-card";
+import { RenewedAccountsCard } from "@/components/orden/renewed-accounts-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrderTracking } from "@/hooks/orders/use-order-tracking";
@@ -93,7 +94,9 @@ export default function OrderTrackingPage({
 	const info = STATUS_INFO[data.status ?? "pending"] ?? STATUS_INFO.pending;
 	const isCompleted = data.status === "completed";
 	const isFailed = data.status === "failed" || data.status === "cancelled";
+	const isRenewal = data.kind === "renewal";
 	const hasAccounts = (data.delivered?.length ?? 0) > 0;
+	const hasRenewed = (data.renewed?.length ?? 0) > 0;
 
 	const StatusIcon = isCompleted ? CheckCircle2 : isFailed ? XCircle : Clock;
 	const iconWrapClass = isCompleted
@@ -120,13 +123,15 @@ export default function OrderTrackingPage({
 					{info.description}
 				</p>
 
-				{isCompleted && hasAccounts ? (
+				{isCompleted && isRenewal && hasRenewed ? (
+					<RenewedAccountsCard items={data.renewed ?? []} />
+				) : isCompleted && !isRenewal && hasAccounts ? (
 					<DeliveredAccountsCard accounts={data.delivered ?? []} />
-				) : isCompleted && data.outOfStock ? (
+				) : isCompleted && (data.outOfStock || (isRenewal && !hasRenewed)) ? (
 					<div className="rounded-lg border bg-background p-4">
 						<p className="text-sm text-muted-foreground">
-							Tu pago fue confirmado, pero estamos terminando de preparar tu
-							cuenta. Escribinos con tu número de orden #{data.id} si tarda.
+							Tu pago fue confirmado, pero estamos terminando de procesarlo.
+							Escribinos con tu número de orden #{data.id} si tarda.
 						</p>
 					</div>
 				) : !isCompleted && !isFailed ? (
