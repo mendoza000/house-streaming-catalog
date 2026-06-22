@@ -32,5 +32,13 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["**/.agents/**"],
+			"linter": { "enabled": false },
+			"formatter": { "enabled": false },
+			"assist": { "enabled": false }
+		}
+	]
 }
