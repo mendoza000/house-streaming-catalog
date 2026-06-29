@@ -8,6 +8,7 @@ export type Product = {
 	image: string;
 	available?: number; // Pantallas disponibles (stock). undefined = sin dato aún.
 	byRequest?: boolean; // Servicio bajo pedido: disponibilidad se consulta al admin.
+	salesDisabled?: boolean; // Forzado no-vendible por el admin (≠ agotado por stock).
 };
 
 export const categories = [

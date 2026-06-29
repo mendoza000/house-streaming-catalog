@@ -32,6 +32,10 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 	// (gestionado local o proveedor) manda sobre el badge "Bajo pedido".
 	const hasStockData = product.available !== undefined;
 	const isSoldOut = hasStockData && (product.available ?? 0) <= 0;
+	// Deshabilitado manualmente por el admin: visible pero no comprable. Tiene
+	// prioridad sobre el resto de estados.
+	const isSalesDisabled = product.salesDisabled === true;
+	const isDisabled = isSalesDisabled || isSoldOut;
 
 	const handleConfirm = (accounts: number, months: number) => {
 		onAddToCart?.(product, accounts, months);
@@ -71,7 +75,9 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 							/mes
 						</span>
 					</p>
-					{hasStockData ? (
+					{isSalesDisabled ? (
+						<Badge variant="destructive">No disponible</Badge>
+					) : hasStockData ? (
 						isSoldOut ? (
 							<Badge variant="destructive">Agotado</Badge>
 						) : (
@@ -88,10 +94,14 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 					<Button
 						className="w-full"
 						onClick={() => setIsModalOpen(true)}
-						disabled={isSoldOut}
+						disabled={isDisabled}
 					>
 						<ShoppingCart className="mr-2 h-4 w-4" />
-						{isSoldOut ? "Agotado" : "Agregar al carrito"}
+						{isSalesDisabled
+							? "No disponible"
+							: isSoldOut
+								? "Agotado"
+								: "Agregar al carrito"}
 					</Button>
 				</CardFooter>
 			</Card>
