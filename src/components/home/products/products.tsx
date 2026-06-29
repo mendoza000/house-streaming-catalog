@@ -42,6 +42,31 @@ export default function Products() {
 				// pedido sin stock).
 				const providerAvailable = providerStock?.[service.id];
 
+				// Override manual del admin (services.sales_override):
+				//   null  -> automático (lógica de stock de siempre)
+				//   true  -> forzar habilitado (usa stock real si hay; si no, bajo pedido)
+				//   false -> forzar deshabilitado ("No disponible", no se puede comprar)
+				const override = service.sales_override;
+				let byRequest = service.is_by_request;
+				let salesDisabled = false;
+				let available: number | undefined;
+
+				if (override === false) {
+					salesDisabled = true;
+				} else if (override === true) {
+					const real = providerAvailable ?? stock?.[service.id];
+					if (real && real > 0) {
+						available = real;
+					} else {
+						available = undefined; // sin tope → "Bajo pedido"
+						byRequest = true; // enruta al flujo de ticket / fulfillment manual
+					}
+				} else {
+					available =
+						providerAvailable ??
+						(service.is_by_request ? undefined : stock?.[service.id]);
+				}
+
 				return {
 					id: service.id.toString(),
 					name: service.comercial_name ?? "Sin nombre",
@@ -50,10 +75,9 @@ export default function Products() {
 					description: service.description ?? "",
 					category: service.category ?? "Otros",
 					image: service.img ?? "",
-					byRequest: service.is_by_request,
-					available:
-						providerAvailable ??
-						(service.is_by_request ? undefined : stock?.[service.id]),
+					byRequest,
+					available,
+					salesDisabled,
 				};
 			})
 			.filter((product) => {

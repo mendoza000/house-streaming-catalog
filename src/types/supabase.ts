@@ -438,6 +438,7 @@ export type Database = {
 					img: string | null;
 					is_by_request: boolean;
 					name: string | null;
+					sales_override: boolean | null;
 					screen_price: number | null;
 				};
 				Insert: {
@@ -450,6 +451,7 @@ export type Database = {
 					img?: string | null;
 					is_by_request?: boolean;
 					name?: string | null;
+					sales_override?: boolean | null;
 					screen_price?: number | null;
 				};
 				Update: {
@@ -462,6 +464,7 @@ export type Database = {
 					img?: string | null;
 					is_by_request?: boolean;
 					name?: string | null;
+					sales_override?: boolean | null;
 					screen_price?: number | null;
 				};
 				Relationships: [];
