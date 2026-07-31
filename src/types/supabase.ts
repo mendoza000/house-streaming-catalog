@@ -260,6 +260,7 @@ export type Database = {
 					client_phone: string | null;
 					created_at: string;
 					currency: string | null;
+					delivery_notified_at: string | null;
 					id: number;
 					items: Json | null;
 					kind: string;
@@ -276,6 +277,7 @@ export type Database = {
 					client_phone?: string | null;
 					created_at?: string;
 					currency?: string | null;
+					delivery_notified_at?: string | null;
 					id?: number;
 					items?: Json | null;
 					kind?: string;
@@ -292,6 +294,7 @@ export type Database = {
 					client_phone?: string | null;
 					created_at?: string;
 					currency?: string | null;
+					delivery_notified_at?: string | null;
 					id?: number;
 					items?: Json | null;
 					kind?: string;
@@ -299,6 +302,33 @@ export type Database = {
 					payment_reference?: string | null;
 					status?: string | null;
 					tracking_token?: string;
+				};
+				Relationships: [];
+			};
+			push_subscriptions: {
+				Row: {
+					auth_key: string;
+					created_at: string;
+					endpoint: string;
+					id: string;
+					p256dh: string;
+					user_id: string;
+				};
+				Insert: {
+					auth_key: string;
+					created_at?: string;
+					endpoint: string;
+					id?: string;
+					p256dh: string;
+					user_id: string;
+				};
+				Update: {
+					auth_key?: string;
+					created_at?: string;
+					endpoint?: string;
+					id?: string;
+					p256dh?: string;
+					user_id?: string;
 				};
 				Relationships: [];
 			};
@@ -377,6 +407,7 @@ export type Database = {
 					order_id: number | null;
 					reseller: number | null;
 					screen: number | null;
+					source: string | null;
 				};
 				Insert: {
 					account_id?: number | null;
@@ -386,6 +417,7 @@ export type Database = {
 					order_id?: number | null;
 					reseller?: number | null;
 					screen?: number | null;
+					source?: string | null;
 				};
 				Update: {
 					account_id?: number | null;
@@ -395,6 +427,7 @@ export type Database = {
 					order_id?: number | null;
 					reseller?: number | null;
 					screen?: number | null;
+					source?: string | null;
 				};
 				Relationships: [
 					{
@@ -561,6 +594,57 @@ export type Database = {
 					},
 				];
 			};
+			whatsapp_outbox: {
+				Row: {
+					account_id: number;
+					client_id: number;
+					created_at: string;
+					created_by: string | null;
+					error: string | null;
+					id: string;
+					notification_type: string;
+					sent_at: string | null;
+					status: string;
+				};
+				Insert: {
+					account_id: number;
+					client_id: number;
+					created_at?: string;
+					created_by?: string | null;
+					error?: string | null;
+					id?: string;
+					notification_type: string;
+					sent_at?: string | null;
+					status?: string;
+				};
+				Update: {
+					account_id?: number;
+					client_id?: number;
+					created_at?: string;
+					created_by?: string | null;
+					error?: string | null;
+					id?: string;
+					notification_type?: string;
+					sent_at?: string | null;
+					status?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "whatsapp_outbox_account_id_fkey";
+						columns: ["account_id"];
+						isOneToOne: false;
+						referencedRelation: "accounts";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "whatsapp_outbox_client_id_fkey";
+						columns: ["client_id"];
+						isOneToOne: false;
+						referencedRelation: "clients";
+						referencedColumns: ["id"];
+					},
+				];
+			};
 		};
 		Views: {
 			service_stock: {
@@ -574,18 +658,20 @@ export type Database = {
 		};
 		Functions: {
 			fulfill_order: { Args: { p_order_id: number }; Returns: Json };
-			renew_order: { Args: { p_order_id: number }; Returns: Json };
+			is_admin: { Args: never; Returns: boolean };
 			lookup_renewable_accounts: {
 				Args: { p_phone: string };
 				Returns: {
 					client_id: number;
-					service_id: number;
-					service: string;
+					expires_at: string;
+					order_client_email: string;
 					screen: number;
-					expires_at: string | null;
 					screen_price: number;
+					service: string;
+					service_id: number;
 				}[];
 			};
+			renew_order: { Args: { p_order_id: number }; Returns: Json };
 		};
 		Enums: {
 			[_ in never]: never;

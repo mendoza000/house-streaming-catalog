@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthListener } from "@/components/auth/auth-listener";
 import { Footer } from "@/components/footer/footer";
 import Navbar from "@/components/navbar/navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -75,6 +76,7 @@ export default function RootLayout({
 					disableTransitionOnChange
 				>
 					<QueryProvider>
+						<AuthListener />
 						<Navbar />
 						{children}
 						<Footer />
