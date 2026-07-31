@@ -83,6 +83,14 @@ export async function createRenewalOrder(input: {
 
 		const byClientId = new Map(accounts.map((a) => [a.client_id, a]));
 
+		// Email de la compra original de alguna de las pantallas seleccionadas (si
+		// existe), para que la renovación aparezca en "Mis compras" al loguearse con
+		// ese email. Puede no haber ninguno (compras muy viejas sin email registrado).
+		const clientEmail =
+			selections
+				.map((sel) => byClientId.get(sel.client_id)?.order_client_email)
+				.find((email): email is string => !!email) ?? null;
+
 		// 2. Validar selecciones contra ese set y armar líneas con precio autoritativo.
 		const lines: RenewalOrderItem[] = [];
 		const pseudoItems: CartItem[] = [];
@@ -129,6 +137,7 @@ export async function createRenewalOrder(input: {
 				kind: "renewal",
 				status: "draft",
 				client_phone: phone,
+				client_email: clientEmail,
 				amount: settlement.total,
 				currency: settlement.currency,
 				payment_method: method.name,
