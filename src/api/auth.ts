@@ -76,18 +76,30 @@ export async function signOut(): Promise<{ error: Error | null }> {
 	}
 }
 
-/** Envía el email de recuperación; el link redirige a /cuenta/nueva-password. */
+/**
+ * Envía el email de recuperación vía POST /api/auth/forgot-password
+ * (server-side, service-role + Resend) en vez del SMTP interno de Supabase
+ * Auth, que no es apto para producción.
+ */
 export async function requestPasswordReset(
 	email: string,
 ): Promise<{ error: Error | null }> {
 	try {
-		const { error } = await supabase.auth.resetPasswordForEmail(
-			normalizeEmail(email),
-			{
-				redirectTo: `${window.location.origin}/cuenta/nueva-password`,
-			},
-		);
-		if (error) return { error: new Error(error.message) };
+		const res = await fetch("/api/auth/forgot-password", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email: normalizeEmail(email) }),
+		});
+
+		if (!res.ok) {
+			const json = await res.json().catch(() => null);
+			return {
+				error: new Error(
+					json?.error ?? "No se pudo enviar el correo de recuperación",
+				),
+			};
+		}
+
 		return { error: null };
 	} catch (error) {
 		return {
