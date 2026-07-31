@@ -1,18 +1,23 @@
-import Image from "next/image";
+import FaultyTerminal from "@/components/FaultyTerminal";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
 import { Button } from "../ui/button";
 
 export default function Header() {
 	return (
 		<header className="relative border-2 shadow-lg mx-4 min-h-[50vh] rounded-2xl my-5 overflow-hidden flex flex-col items-center justify-center gap-4 px-6 py-12 mt-20">
-			{/* Imagen de fondo */}
+			{/* Fondo animado */}
 			<div className="absolute inset-0 z-0">
-				<Image
-					src="/header-bg.jpg"
-					alt="Servicios de streaming"
-					fill
-					className="object-cover"
-					priority
+				<FaultyTerminal
+					scale={1.5}
+					gridMul={[2, 1]}
+					digitSize={1.2}
+					timeScale={0.4}
+					curvature={0.15}
+					scanlineIntensity={0.3}
+					tint="#ffffff"
+					brightness={0.6}
+					mouseReact
+					mouseStrength={0.3}
 				/>
 				{/* Overlay oscuro para mejorar legibilidad */}
 				<div className="absolute inset-0 bg-black/70" />

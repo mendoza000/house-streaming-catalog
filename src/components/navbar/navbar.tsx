@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import { getWhatsAppUrl } from "@/lib/whatsapp";
+import { useAuthStore } from "@/stores/auth-store";
 import { Cart } from "./cart";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -23,6 +24,7 @@ const LINKS = [
 
 export default function Navbar() {
 	const [open, setOpen] = useState(false);
+	const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
 	return (
 		<nav className="fixed top-0 left-0 right-0 z-50 bg-background px-5 py-2 border-b-2">
@@ -54,6 +56,16 @@ export default function Navbar() {
 				</div>
 
 				<div className="flex items-center gap-4">
+					{/* Ingresar/Mi Cuenta solo en desktop */}
+					<Link
+						href={isLoggedIn ? "/cuenta" : "/cuenta/login"}
+						className="hidden md:block"
+					>
+						<Button variant="ghost" size="sm">
+							<User className="size-4" />
+							{isLoggedIn ? "Mi Cuenta" : "Ingresar"}
+						</Button>
+					</Link>
 					<Cart />
 					{/* ThemeToggle solo en desktop */}
 					<div className="hidden md:block">
@@ -73,6 +85,13 @@ export default function Navbar() {
 							</SheetHeader>
 							<div className="flex flex-col h-full">
 								<div className="flex flex-col gap-1 p-4">
+									<Link
+										href={isLoggedIn ? "/cuenta" : "/cuenta/login"}
+										className="px-4 py-3 hover:bg-accent rounded-md transition-colors"
+										onClick={() => setOpen(false)}
+									>
+										{isLoggedIn ? "Mi Cuenta" : "Ingresar"}
+									</Link>
 									{LINKS.map((link) => (
 										<Link
 											key={link.href}
