@@ -51,13 +51,11 @@ export async function createOrUpdateDraftOrder(
 	data: CreateOrderData,
 ): Promise<{ data: Order | null; error: Error | null }> {
 	try {
+		const clientEmail = data.client_email.trim().toLowerCase();
 		const cartHash = await generateCartHash(data.items);
 
 		// Buscar draft existente
-		const { data: existingDraft } = await findDraftOrder(
-			data.client_email,
-			cartHash,
-		);
+		const { data: existingDraft } = await findDraftOrder(clientEmail, cartHash);
 
 		if (existingDraft) {
 			// Actualizar draft existente
@@ -95,7 +93,7 @@ export async function createOrUpdateDraftOrder(
 			const insertData: OrderInsert = {
 				client_name: data.client_name,
 				client_phone: data.client_phone,
-				client_email: data.client_email,
+				client_email: clientEmail,
 				amount: data.amount,
 				payment_method: data.payment_method,
 				currency: data.currency,
@@ -172,7 +170,7 @@ export async function getOrdersByEmail(
 		const { data: orders, error } = await supabase
 			.from("orders")
 			.select("*")
-			.eq("client_email", email)
+			.eq("client_email", email.trim().toLowerCase())
 			.order("created_at", { ascending: false });
 
 		if (error) {
