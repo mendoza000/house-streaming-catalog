@@ -6,6 +6,11 @@ const NAV_LINKS = [
 	{ href: "/quienes-somos", label: "Quiénes somos" },
 ];
 
+const LEGAL_LINKS = [
+	{ href: "/terminos-y-condiciones", label: "Términos y Condiciones" },
+	{ href: "/politica-de-privacidad", label: "Política de Privacidad" },
+];
+
 const PAYMENT_METHODS = ["PayPal", "Binance Pay", "Pago Móvil"];
 
 export function Footer() {
@@ -14,7 +19,7 @@ export function Footer() {
 	return (
 		<footer className="border-t mt-16 bg-background">
 			<div className="container mx-auto px-5 py-12">
-				<div className="grid gap-8 md:grid-cols-3">
+				<div className="grid gap-8 md:grid-cols-4">
 					{/* Marca */}
 					<div>
 						<strong className="text-lg">House Streaming</strong>
@@ -58,6 +63,23 @@ export function Footer() {
 							{PAYMENT_METHODS.map((method) => (
 								<li key={method} className="text-sm text-muted-foreground">
 									{method}
+								</li>
+							))}
+						</ul>
+					</div>
+
+					{/* Legal */}
+					<div>
+						<h3 className="text-sm font-semibold mb-3">Legal</h3>
+						<ul className="space-y-2">
+							{LEGAL_LINKS.map((link) => (
+								<li key={link.href}>
+									<Link
+										href={link.href}
+										className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+									>
+										{link.label}
+									</Link>
 								</li>
 							))}
 						</ul>

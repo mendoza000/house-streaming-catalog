@@ -4,10 +4,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { CheckCircle2, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
 import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/auth/use-auth";
@@ -16,6 +17,7 @@ interface RegisterFormData {
 	email: string;
 	password: string;
 	confirmPassword: string;
+	acceptedTerms: boolean;
 }
 
 const registerSchema = yup.object({
@@ -32,6 +34,10 @@ const registerSchema = yup.object({
 		.string()
 		.required("Confirmá tu contraseña")
 		.oneOf([yup.ref("password")], "Las contraseñas no coinciden"),
+	acceptedTerms: yup
+		.boolean()
+		.oneOf([true], "Debes aceptar los Términos y Condiciones")
+		.required("Debes aceptar los Términos y Condiciones"),
 });
 
 export default function RegistroPage() {
@@ -39,11 +45,17 @@ export default function RegistroPage() {
 	const { register: registerUser, isLoading, error } = useAuth();
 	const {
 		register,
+		control,
 		handleSubmit,
 		formState: { errors },
 	} = useForm<RegisterFormData>({
 		resolver: yupResolver(registerSchema),
-		defaultValues: { email: "", password: "", confirmPassword: "" },
+		defaultValues: {
+			email: "",
+			password: "",
+			confirmPassword: "",
+			acceptedTerms: false,
+		},
 	});
 
 	const onSubmit = async (values: RegisterFormData) => {
@@ -143,6 +155,48 @@ export default function RegistroPage() {
 					{errors.confirmPassword && (
 						<p className="text-sm text-destructive">
 							{errors.confirmPassword.message}
+						</p>
+					)}
+				</div>
+
+				<div className="space-y-2">
+					<div className="flex items-start gap-2">
+						<Controller
+							name="acceptedTerms"
+							control={control}
+							render={({ field }) => (
+								<Checkbox
+									id="register-accepted-terms"
+									checked={field.value}
+									onCheckedChange={field.onChange}
+									aria-invalid={!!errors.acceptedTerms}
+									className="mt-0.5"
+								/>
+							)}
+						/>
+						<Label
+							htmlFor="register-accepted-terms"
+							className="text-sm font-normal text-muted-foreground"
+						>
+							Acepto los{" "}
+							<Link
+								href="/terminos-y-condiciones"
+								className="font-medium text-primary hover:underline"
+							>
+								Términos y Condiciones
+							</Link>{" "}
+							y la{" "}
+							<Link
+								href="/politica-de-privacidad"
+								className="font-medium text-primary hover:underline"
+							>
+								Política de Privacidad
+							</Link>
+						</Label>
+					</div>
+					{errors.acceptedTerms && (
+						<p className="text-sm text-destructive">
+							{errors.acceptedTerms.message}
 						</p>
 					)}
 				</div>

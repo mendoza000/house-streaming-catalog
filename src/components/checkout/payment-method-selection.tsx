@@ -1,8 +1,12 @@
 "use client";
 
 import { AlertCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { PAYMENT_METHODS } from "@/constants/payment-methods";
 import type { CartItem } from "@/stores/cart-store";
 import { PaymentMethodCard } from "./payment-method-card";
@@ -27,6 +31,8 @@ export function PaymentMethodSelection({
 	isCreatingOrder,
 	hasCreateOrderError,
 }: PaymentMethodSelectionProps) {
+	const [acceptedTerms, setAcceptedTerms] = useState(false);
+
 	return (
 		<Card>
 			<CardHeader>
@@ -53,6 +59,34 @@ export function PaymentMethodSelection({
 					</div>
 				)}
 
+				<div className="flex items-start gap-2">
+					<Checkbox
+						id="checkout-accepted-terms"
+						checked={acceptedTerms}
+						onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+						className="mt-0.5"
+					/>
+					<Label
+						htmlFor="checkout-accepted-terms"
+						className="text-sm font-normal text-muted-foreground"
+					>
+						Acepto los{" "}
+						<Link
+							href="/terminos-y-condiciones"
+							className="font-medium text-primary hover:underline"
+						>
+							Términos y Condiciones
+						</Link>{" "}
+						y la{" "}
+						<Link
+							href="/politica-de-privacidad"
+							className="font-medium text-primary hover:underline"
+						>
+							Política de Privacidad
+						</Link>
+					</Label>
+				</div>
+
 				<Button
 					size="lg"
 					className="w-full"
@@ -60,6 +94,7 @@ export function PaymentMethodSelection({
 						!selectedMethodId ||
 						cartItems.length === 0 ||
 						!isClientFormValid ||
+						!acceptedTerms ||
 						isCreatingOrder
 					}
 					onClick={onContinue}
@@ -83,6 +118,12 @@ export function PaymentMethodSelection({
 				{!isClientFormValid && cartItems.length > 0 && (
 					<p className="text-center text-sm text-muted-foreground">
 						Completa tus datos para continuar
+					</p>
+				)}
+
+				{isClientFormValid && selectedMethodId && !acceptedTerms && (
+					<p className="text-center text-sm text-muted-foreground">
+						Debes aceptar los Términos y Condiciones para continuar
 					</p>
 				)}
 			</CardContent>
